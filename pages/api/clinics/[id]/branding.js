@@ -24,10 +24,14 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Clinic not found' });
     }
     
-    // Only allow access to superadmins or the clinic's own admin
+    // Allow access to:
+    // - Superadmins (full access)
+    // - Clinic admins for their own clinic
+    // - Doctors from the same clinic (read-only for GET requests)
     if (
       session.user.role !== 'superadmin' && 
-      !(session.user.role === 'clinicadmin' && session.user.clinicId === id)
+      !(session.user.role === 'clinicadmin' && session.user.clinicId === id) &&
+      !(session.user.role === 'doctor' && session.user.clinicId === id && req.method === 'GET')
     ) {
       return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
     }

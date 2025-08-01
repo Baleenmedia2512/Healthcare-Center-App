@@ -34,7 +34,7 @@ export const ThemeProvider = ({ children }) => {
         setIsLoading(true);
         try {
           // Fetch clinic branding settings
-          const response = await apiClient.get(`/api/clinics/${session.user.clinicId}/branding`);
+          const response = await apiClient.get(`/clinics/${session.user.clinicId}/branding`);
           const branding = response.data;
           
           setClinicBranding(branding);

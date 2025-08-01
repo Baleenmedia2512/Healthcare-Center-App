@@ -56,7 +56,10 @@ async function main() {
   const doctorPassword = await bcrypt.hash('doctor123', 12);
   const doctor = await prisma.user.upsert({
     where: { email: 'doctor@democlinic.com' },
-    update: {},
+    update: {
+      branchId: branch.id,
+      clinicId: clinic.id,
+    },
     create: {
       email: 'doctor@democlinic.com',
       hashedPassword: doctorPassword,
@@ -64,6 +67,7 @@ async function main() {
       role: 'doctor',
       isActive: true,
       clinicId: clinic.id,
+      branchId: branch.id,
     },
   });
 

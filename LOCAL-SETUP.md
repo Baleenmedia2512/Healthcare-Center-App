@@ -151,6 +151,30 @@ npm install
 npx prisma generate
 ```
 
+**Windows Permission Error (EPERM) with Prisma**
+If you get an EPERM error when running `npx prisma generate`, follow these steps:
+```powershell
+# 1. Stop all Node.js processes
+taskkill /f /im node.exe
+
+# 2. Remove Prisma cache
+Remove-Item -Recurse -Force "node_modules\.prisma" -ErrorAction SilentlyContinue
+
+# 3. Regenerate Prisma client
+npx prisma generate
+
+# 4. Restart development server
+npm run dev
+```
+
+**Patient Registration Error (400 Bad Request)**
+If patient registration fails with a 400 error, ensure the doctor user has a branch assignment:
+```bash
+# Re-seed the database to fix user data
+npm run db:seed
+# Then log out and log back in to refresh your session
+```
+
 ### 🔄 Making Changes
 
 1. **Database Schema Changes**:

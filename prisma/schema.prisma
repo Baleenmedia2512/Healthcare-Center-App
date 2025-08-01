@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// New model for SaaS Clinic
+model Clinic {
+  id            String    @id @default(cuid())
+  name          String
+  address       String
+  contactEmail  String
+  contactPhone  String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Branding fields
+  logoUrl       String?
+  faviconUrl    String?
+  primaryColor  String?   @default("#84c9ef")
+  secondaryColor String?  @default("#b4d2ed")
+  customCss     String?
+  customDomain  String?   @unique
+  
+  // Relations
+  branches      Branch[]
+  users         User[]
+  
+  @@map("clinics")
+}
+
+// New model for Branch
+model Branch {
+  id          String    @id @default(cuid())
+  name        String
+  address     String
+  contactEmail String
+  contactPhone String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  clinicId    String
+  clinic      Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  users       User[]
+  patients    Patient[]
+  
+  @@map("branches")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  hashedPassword String
+  fullName       String?
+  role           String    @default("doctor") // SUPERADMIN, CLINICADMIN, BRANCHADMIN, DOCTOR
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // New relations for multi-tenant architecture
+  clinicId       String?
+  clinic         Clinic?    @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  branchId       String?
+  branch         Branch?    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  
+  patients       Patient[]
+  
+  @@map("users")
+}
+
+model Patient {
+  id               String    @id @default(cuid())
+  name             String
+  guardianName     String?
+  address          String
+  age              Int
+  sex              String
+  occupation       String?
+  mobileNumber     String
+  chiefComplaints  String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  // JSON fields stored as TEXT for SQLite compatibility
+  medicalHistory   String?
+  physicalGenerals String?
+  menstrualHistory String?
+  foodAndHabit     String?
+  
+  // Relations
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // New relations for multi-tenant architecture
+  branchId         String
+  branch           Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  investigations   Investigation[]
+  
+  @@map("patients")
+}
+
+model Investigation {
+  id             String    @id @default(cuid())
+  type           String
+  details        String
+  date           DateTime
+  fileUrl        String?
+  doctor         String?
+  results        String?
+  normalRange    String?
+  followUpNeeded Boolean?  @default(false)
+  followUpDate   DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // Relations
+  patientId      String
+  patient        Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  @@map("investigations")
+}

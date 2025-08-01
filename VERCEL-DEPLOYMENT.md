@@ -38,6 +38,66 @@ npx prisma db push
 npx prisma db seed
 ```
 
+### 4. Fix Corrupted Data (IMPORTANT)
+If you get JSON parsing errors, clean corrupted patient data:
+```bash
+# Run this locally with production DATABASE_URL
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+async function fixCorruptedData() {
+  try {
+    console.log('🔧 Fixing corrupted JSON data in production...');
+    
+    const patients = await prisma.patient.findMany({
+      select: {
+        id: true,
+        name: true,
+        medicalHistory: true,
+        physicalGenerals: true,
+        menstrualHistory: true,
+        foodAndHabit: true
+      }
+    });
+    
+    let fixed = 0;
+    for (const patient of patients) {
+      const updates = {};
+      const fields = ['medicalHistory', 'physicalGenerals', 'menstrualHistory', 'foodAndHabit'];
+      
+      for (const field of fields) {
+        if (patient[field]) {
+          try {
+            JSON.parse(patient[field]);
+          } catch (e) {
+            console.log(\`Fixing \${patient.name} - \${field}\`);
+            updates[field] = null;
+          }
+        }
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await prisma.patient.update({
+          where: { id: patient.id },
+          data: updates
+        });
+        fixed++;
+      }
+    }
+    
+    console.log(\`✅ Fixed \${fixed} patients\`);
+    await prisma.\$disconnect();
+  } catch (error) {
+    console.error('❌ Error:', error);
+    await prisma.\$disconnect();
+  }
+}
+
+fixCorruptedData();
+"
+```
+
 ### 4. Build Configuration
 Your `next.config.js` is already configured for Vercel.
 

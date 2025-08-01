@@ -101,51 +101,79 @@ const validateAndSanitizePatientData = (data) => {
     gonorrhea: 'No', otherDischarges: ''
   } : null;
 
-  // Safe parsing of JSON fields
+  // Safe parsing of JSON fields with enhanced validation
   let sanitizedMedicalHistory;
   let sanitizedPhysicalGenerals;
   let sanitizedMenstrualHistory;
   let sanitizedFoodAndHabit;
 
-  try {
-    sanitizedMedicalHistory = medicalHistory 
-      ? (typeof medicalHistory === 'string' ? JSON.parse(medicalHistory) : medicalHistory) 
-      : defaultMedicalHistory;
-  } catch (e) {
-    console.log('Error parsing medicalHistory:', e);
-    sanitizedMedicalHistory = defaultMedicalHistory;
-  }
+  // Helper function to safely parse and validate JSON
+  const safeJsonParse = (data, defaultValue, fieldName) => {
+    if (!data) return defaultValue;
+    
+    try {
+      let parsed;
+      if (typeof data === 'string') {
+        // Validate string before parsing
+        if (data.trim().length === 0) return defaultValue;
+        parsed = JSON.parse(data);
+      } else if (typeof data === 'object') {
+        parsed = data;
+      } else {
+        console.log(`Warning: ${fieldName} has unexpected type ${typeof data}, using default`);
+        return defaultValue;
+      }
+      
+      // Validate parsed object structure
+      if (typeof parsed !== 'object' || parsed === null) {
+        console.log(`Warning: ${fieldName} parsed to non-object, using default`);
+        return defaultValue;
+      }
+      
+      return parsed;
+    } catch (e) {
+      console.log(`Error parsing ${fieldName}:`, e.message);
+      console.log(`Problematic data (first 100 chars):`, typeof data === 'string' ? data.substring(0, 100) : String(data).substring(0, 100));
+      return defaultValue;
+    }
+  };
 
-  try {
-    sanitizedPhysicalGenerals = physicalGenerals 
-      ? (typeof physicalGenerals === 'string' ? JSON.parse(physicalGenerals) : physicalGenerals) 
-      : defaultPhysicalGenerals;
-  } catch (e) {
-    console.log('Error parsing physicalGenerals:', e);
-    sanitizedPhysicalGenerals = defaultPhysicalGenerals;
-  }
-
-  try {
-    sanitizedMenstrualHistory = sex === 'Female' && menstrualHistory 
-      ? (typeof menstrualHistory === 'string' ? JSON.parse(menstrualHistory) : menstrualHistory) 
-      : defaultMenstrualHistory;
-  } catch (e) {
-    console.log('Error parsing menstrualHistory:', e);
-    sanitizedMenstrualHistory = defaultMenstrualHistory;
-  }
-
-  try {
-    sanitizedFoodAndHabit = foodAndHabit 
-      ? (typeof foodAndHabit === 'string' ? JSON.parse(foodAndHabit) : foodAndHabit) 
-      : defaultFoodAndHabit;
-  } catch (e) {
-    console.log('Error parsing foodAndHabit:', e);
-    sanitizedFoodAndHabit = defaultFoodAndHabit;
-  }
+  sanitizedMedicalHistory = safeJsonParse(medicalHistory, defaultMedicalHistory, 'medicalHistory');
+  sanitizedPhysicalGenerals = safeJsonParse(physicalGenerals, defaultPhysicalGenerals, 'physicalGenerals');
+  sanitizedMenstrualHistory = sex === 'Female' 
+    ? safeJsonParse(menstrualHistory, defaultMenstrualHistory, 'menstrualHistory')
+    : defaultMenstrualHistory;
+  sanitizedFoodAndHabit = safeJsonParse(foodAndHabit, defaultFoodAndHabit, 'foodAndHabit');
 
   console.log('Data sanitization complete');
 
-  // Prepare the sanitized data
+  // Helper function to safely stringify JSON with validation
+  const safeJsonStringify = (data, fieldName) => {
+    try {
+      if (!data || typeof data !== 'object') {
+        console.log(`Warning: ${fieldName} is not an object, stringifying as-is`);
+        return JSON.stringify(data);
+      }
+      
+      const stringified = JSON.stringify(data);
+      
+      // Validate the stringified result can be parsed back
+      JSON.parse(stringified);
+      
+      // Additional validation: check for common corruption patterns
+      if (stringified.includes('undefined') || stringified.includes('NaN')) {
+        console.log(`Warning: ${fieldName} contains undefined/NaN values`);
+      }
+      
+      return stringified;
+    } catch (e) {
+      console.error(`Error stringifying ${fieldName}:`, e.message);
+      console.error(`Problematic data:`, data);
+      throw new Error(`Failed to safely stringify ${fieldName}: ${e.message}`);
+    }
+  };
+
+  // Prepare the sanitized data with safe stringification
   const sanitizedData = {
     name: name.trim(),
     guardianName: guardianName ? guardianName.trim() : null,
@@ -155,10 +183,10 @@ const validateAndSanitizePatientData = (data) => {
     occupation: occupation ? occupation.trim() : null,
     mobileNumber: mobileNumber.trim(),
     chiefComplaints: chiefComplaints.trim(),
-    stringifiedMedicalHistory: JSON.stringify(sanitizedMedicalHistory),
-    stringifiedPhysicalGenerals: JSON.stringify(sanitizedPhysicalGenerals),
-    stringifiedMenstrualHistory: sex === 'Female' ? JSON.stringify(sanitizedMenstrualHistory) : null,
-    stringifiedFoodAndHabit: JSON.stringify(sanitizedFoodAndHabit)
+    stringifiedMedicalHistory: safeJsonStringify(sanitizedMedicalHistory, 'medicalHistory'),
+    stringifiedPhysicalGenerals: safeJsonStringify(sanitizedPhysicalGenerals, 'physicalGenerals'),
+    stringifiedMenstrualHistory: sex === 'Female' ? safeJsonStringify(sanitizedMenstrualHistory, 'menstrualHistory') : null,
+    stringifiedFoodAndHabit: safeJsonStringify(sanitizedFoodAndHabit, 'foodAndHabit')
   };
   
   // If userId is provided, include it in the sanitized data
@@ -228,54 +256,92 @@ export default async function handler(req, res) {
         
         const patients = await prisma.patient.findMany(queryParams);
 
-        // Transform data to match frontend expectations
+        // Transform data to match frontend expectations with safe parsing
         const transformedPatients = patients.map(patient => {
-          // Parse JSON fields stored as strings
-          const medicalHistory = patient.medicalHistory ? JSON.parse(patient.medicalHistory) : {
-            pastHistory: {
-              allergy: false,
-              anemia: false,
-              arthritis: false,
-              asthma: false,
-              cancer: false,
-              diabetes: false,
-              heartDisease: false,
-              hypertension: false,
-              thyroid: false,
-              tuberculosis: false,
-            },
-            familyHistory: {
-              diabetes: false,
-              hypertension: false,
-              thyroid: false,
-              tuberculosis: false,
-              cancer: false,
+          // Helper function for safe JSON parsing in GET responses
+          const safeParsePatientField = (data, defaultValue, fieldName, patientName) => {
+            if (!data) return defaultValue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              return parsed;
+            } catch (e) {
+              console.error(`Corruption detected in ${patientName} - ${fieldName}:`, e.message);
+              console.error(`Corrupted data (first 100 chars):`, data.substring(0, 100));
+              
+              // Log corruption for monitoring
+              console.error(`CORRUPTION ALERT: Patient ${patientName} (${patient.id}) has corrupted ${fieldName}`);
+              
+              // Return default value to prevent API failure
+              return defaultValue;
             }
           };
+
+          // Parse JSON fields stored as strings with corruption protection
+          const medicalHistory = safeParsePatientField(
+            patient.medicalHistory,
+            {
+              pastHistory: {
+                allergy: false,
+                anemia: false,
+                arthritis: false,
+                asthma: false,
+                cancer: false,
+                diabetes: false,
+                heartDisease: false,
+                hypertension: false,
+                thyroid: false,
+                tuberculosis: false,
+              },
+              familyHistory: {
+                diabetes: false,
+                hypertension: false,
+                thyroid: false,
+                tuberculosis: false,
+                cancer: false,
+              }
+            },
+            'medicalHistory',
+            patient.name
+          );
           
-          const physicalGenerals = patient.physicalGenerals ? JSON.parse(patient.physicalGenerals) : {
-            appetite: '',
-            bowel: '',
-            urine: '',
-            sweating: '',
-            sleep: '',
-            thirst: '',
-            addictions: '',
-          };
+          const physicalGenerals = safeParsePatientField(
+            patient.physicalGenerals,
+            {
+              appetite: '',
+              bowel: '',
+              urine: '',
+              sweating: '',
+              sleep: '',
+              thirst: '',
+              addictions: '',
+            },
+            'physicalGenerals',
+            patient.name
+          );
           
-          const menstrualHistory = patient.menstrualHistory ? JSON.parse(patient.menstrualHistory) : 
+          const menstrualHistory = safeParsePatientField(
+            patient.menstrualHistory,
             (patient.sex === 'Female' ? {
               menses: '',
               menopause: 'No',
               leucorrhoea: '',
               gonorrhea: 'No',
               otherDischarges: '',
-            } : null);
+            } : null),
+            'menstrualHistory',
+            patient.name
+          );
             
-          const foodAndHabit = patient.foodAndHabit ? JSON.parse(patient.foodAndHabit) : {
-            foodHabit: '',
-            addictions: '',
-          };
+          const foodAndHabit = safeParsePatientField(
+            patient.foodAndHabit,
+            {
+              foodHabit: '',
+              addictions: '',
+            },
+            'foodAndHabit',
+            patient.name
+          );
           
           return {
             id: patient.id,

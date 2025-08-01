@@ -6,34 +6,69 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
+  // Create a demo clinic
+  const clinic = await prisma.clinic.upsert({
+    where: { id: 'demo-clinic-id' },
+    update: {},
+    create: {
+      id: 'demo-clinic-id',
+      name: 'Demo Healthcare Center',
+      address: '123 Healthcare Street, Medical City, MC 12345',
+      contactEmail: 'admin@democlinic.com',
+      contactPhone: '+1-555-0123',
+      primaryColor: '#84c9ef',
+      secondaryColor: '#b4d2ed',
+      isActive: true,
+    },
+  });
+
+  // Create a demo branch
+  const branch = await prisma.branch.upsert({
+    where: { id: 'demo-branch-id' },
+    update: {},
+    create: {
+      id: 'demo-branch-id',
+      name: 'Main Branch',
+      address: '123 Healthcare Street, Medical City, MC 12345',
+      contactEmail: 'branch@democlinic.com',
+      contactPhone: '+1-555-0124',
+      clinicId: clinic.id,
+      isActive: true,
+    },
+  });
+
   // Create admin user
   const adminPassword = await bcrypt.hash('admin123', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@healthcare.com' },
+    where: { email: 'admin@democlinic.com' },
     update: {},
     create: {
-      email: 'admin@healthcare.com',
+      email: 'admin@democlinic.com',
       hashedPassword: adminPassword,
-      fullName: 'Admin User',
-      role: 'admin',
+      fullName: 'System Administrator',
+      role: 'superadmin',
       isActive: true,
+      clinicId: clinic.id,
     },
   });
 
   // Create doctor user
   const doctorPassword = await bcrypt.hash('doctor123', 12);
   const doctor = await prisma.user.upsert({
-    where: { email: 'doctor@healthcare.com' },
+    where: { email: 'doctor@democlinic.com' },
     update: {},
     create: {
-      email: 'doctor@healthcare.com',
+      email: 'doctor@democlinic.com',
       hashedPassword: doctorPassword,
       fullName: 'Dr. John Doe',
       role: 'doctor',
       isActive: true,
+      clinicId: clinic.id,
     },
   });
 
+  console.log('✅ Clinic created:', { id: clinic.id, name: clinic.name });
+  console.log('✅ Branch created:', { id: branch.id, name: branch.name });
   console.log('✅ Admin user created:', { id: admin.id, email: admin.email });
   console.log('✅ Doctor user created:', { id: doctor.id, email: doctor.email });
 
@@ -49,6 +84,7 @@ async function main() {
       mobileNumber: '+1234567890',
       chiefComplaints: 'Regular checkup and general consultation',
       userId: doctor.id,
+      branchId: branch.id,
       medicalHistory: JSON.stringify({
         pastHistory: {
           allergy: false,
@@ -93,11 +129,18 @@ async function main() {
       details: 'Complete Blood Count (CBC) - All parameters within normal range',
       date: new Date(),
       patientId: samplePatient.id,
+      doctor: 'Dr. John Doe',
+      results: 'All values within normal limits',
+      normalRange: 'Refer to lab standards',
     }
   });
 
   console.log('✅ Sample patient created:', { id: samplePatient.id, name: samplePatient.name });
   console.log('🎉 Database seeded successfully!');
+  console.log('');
+  console.log('📧 Login credentials:');
+  console.log('   Admin: admin@democlinic.com / admin123');
+  console.log('   Doctor: doctor@democlinic.com / doctor123');
 }
 
 main()

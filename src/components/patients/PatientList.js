@@ -229,32 +229,32 @@ const PatientList = () => {
                       <Td>{patient.sex}</Td>
                       <Td>{patient.mobileNumber}</Td>
                       <Td>
-                        <HStack spacing={2}>
+                        <Flex>
                           <IconButton
                             icon={<FiEye />}
-                            variant="ghost"
-                            colorScheme="blue"
+                            variant="outline"
+                            mr={2}
                             onClick={() => viewPatient(patient.id)}
                             aria-label="View patient"
                             size="sm"
                           />
                           <IconButton
                             icon={<FiEdit2 />}
-                            variant="ghost"
-                            colorScheme="green"
+                            variant="outline"
+                            mr={2}
                             onClick={() => editPatient(patient.id)}
                             aria-label="Edit patient"
                             size="sm"
                           />
                           <IconButton
                             icon={<FiTrash2 />}
-                            variant="ghost"
+                            variant="outline"
                             colorScheme="red"
                             onClick={() => confirmDelete(patient)}
                             aria-label="Delete patient"
                             size="sm"
                           />
-                        </HStack>
+                        </Flex>
                       </Td>
                     </Tr>
                   ))

@@ -26,11 +26,12 @@ import {
   useToast,
   IconButton,
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '@/lib/auth';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import apiClient from '@/lib/api/client';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
 // Validation schema for branch form
 const BranchSchema = Yup.object().shape({
@@ -49,20 +50,20 @@ const BranchSchema = Yup.object().shape({
 });
 
 // Branch Form Component
-const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
+const BranchForm = ({ initialValues, onSubmit, clinics }) => {
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={BranchSchema}
       onSubmit={onSubmit}
     >
-      {(props) => (
+      {({ isSubmitting }) => (
         <Form>
           <Field name="name">
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.name && form.touched.name} mb={4}>
                 <FormLabel>Branch Name</FormLabel>
-                <Input {...field} />
+                <Input {...field} disabled={isSubmitting} />
                 <FormErrorMessage>{form.errors.name}</FormErrorMessage>
               </FormControl>
             )}
@@ -72,7 +73,7 @@ const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.address && form.touched.address} mb={4}>
                 <FormLabel>Address</FormLabel>
-                <Input {...field} />
+                <Input {...field} disabled={isSubmitting} />
                 <FormErrorMessage>{form.errors.address}</FormErrorMessage>
               </FormControl>
             )}
@@ -82,7 +83,7 @@ const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.contactEmail && form.touched.contactEmail} mb={4}>
                 <FormLabel>Contact Email</FormLabel>
-                <Input {...field} type="email" />
+                <Input {...field} type="email" disabled={isSubmitting} />
                 <FormErrorMessage>{form.errors.contactEmail}</FormErrorMessage>
               </FormControl>
             )}
@@ -92,7 +93,7 @@ const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.contactPhone && form.touched.contactPhone} mb={4}>
                 <FormLabel>Contact Phone</FormLabel>
-                <Input {...field} />
+                <Input {...field} disabled={isSubmitting} />
                 <FormErrorMessage>{form.errors.contactPhone}</FormErrorMessage>
               </FormControl>
             )}
@@ -102,7 +103,7 @@ const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.clinicId && form.touched.clinicId} mb={4}>
                 <FormLabel>Clinic</FormLabel>
-                <Select {...field} placeholder="Select clinic">
+                <Select {...field} placeholder="Select clinic" disabled={isSubmitting}>
                   {clinics.map((clinic) => (
                     <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
                   ))}
@@ -116,8 +117,10 @@ const BranchForm = ({ initialValues, onSubmit, clinics, isSubmitting }) => {
             mt={4}
             colorScheme="blue"
             isLoading={isSubmitting}
+            loadingText="Saving..."
             type="submit"
             width="100%"
+            disabled={isSubmitting}
           >
             Submit
           </Button>
@@ -133,7 +136,14 @@ const BranchManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [deletingBranchId, setDeletingBranchId] = useState(null);
+  const [branchToDelete, setBranchToDelete] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isDeleteOpen, 
+    onOpen: onDeleteOpen, 
+    onClose: onDeleteClose 
+  } = useDisclosure();
   const { user } = useAuth();
   const toast = useToast();
 
@@ -200,12 +210,55 @@ const BranchManagement = () => {
     onOpen();
   };
 
+  // Handle delete button click - show confirmation
+  const handleDeleteClick = (branch) => {
+    setBranchToDelete(branch);
+    onDeleteOpen();
+  };
+
+  // Handle confirmed deletion
+  const handleDeleteBranch = async () => {
+    if (!branchToDelete) return;
+    
+    try {
+      setDeletingBranchId(branchToDelete.id);
+      await apiClient.delete(`/branches/${branchToDelete.id}`);
+      toast({
+        title: 'Success',
+        description: 'Branch deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      // Refresh branches list
+      fetchBranches();
+      onDeleteClose();
+      setBranchToDelete(null);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to delete branch',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setDeletingBranchId(null);
+    }
+  };
+
+  // Handle delete dialog close
+  const handleDeleteCancel = () => {
+    setBranchToDelete(null);
+    onDeleteClose();
+  };
+
   // Submit handler for branch form
   const handleSubmit = async (values, actions) => {
     try {
       if (selectedBranch) {
         // Update existing branch
-        await apiClient.put(`/api/branches/${selectedBranch.id}`, values);
+        await apiClient.put(`/branches/${selectedBranch.id}`, values);
         toast({
           title: 'Success',
           description: 'Branch updated successfully',
@@ -289,13 +342,6 @@ const BranchManagement = () => {
               </Td>
               <Td>
                 <Flex>
-                  <IconButton
-                    icon={<FiEye />}
-                    aria-label="View branch"
-                    mr={2}
-                    size="sm"
-                    variant="outline"
-                  />
                   {canManageBranches && (
                     <>
                       <IconButton
@@ -305,6 +351,7 @@ const BranchManagement = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditBranch(branch)}
+                        disabled={deletingBranchId === branch.id}
                       />
                       <IconButton
                         icon={<FiTrash2 />}
@@ -312,6 +359,9 @@ const BranchManagement = () => {
                         size="sm"
                         colorScheme="red"
                         variant="outline"
+                        isLoading={deletingBranchId === branch.id}
+                        onClick={() => handleDeleteClick(branch)}
+                        disabled={deletingBranchId === branch.id}
                       />
                     </>
                   )}
@@ -337,6 +387,19 @@ const BranchManagement = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteBranch}
+        title="Delete Branch"
+        message={`Are you sure you want to delete "${branchToDelete?.name}"? This action cannot be undone and will remove all associated data.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deletingBranchId === branchToDelete?.id}
+      />
     </Box>
   );
 };

@@ -31,6 +31,7 @@ import { useAuth } from '@/lib/auth';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import apiClient from '@/lib/api/client';
+import ConfirmationDialog from '@/components/common/ConfirmationDialog';
 
 // Validation schema for clinic form
 const ClinicSchema = Yup.object().shape({
@@ -47,14 +48,14 @@ const ClinicSchema = Yup.object().shape({
 });
 
 // Clinic Form Component
-const ClinicForm = ({ initialValues, onSubmit, isSubmitting }) => {
+const ClinicForm = ({ initialValues, onSubmit }) => {
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={ClinicSchema}
       onSubmit={onSubmit}
     >
-      {(props) => (
+      {({ isSubmitting }) => (
         <Form>
           <Field name="name">
             {({ field, form }) => (
@@ -100,6 +101,7 @@ const ClinicForm = ({ initialValues, onSubmit, isSubmitting }) => {
             mt={4}
             colorScheme="blue"
             isLoading={isSubmitting}
+            loadingText="Saving..."
             type="submit"
             width="100%"
           >
@@ -116,7 +118,14 @@ const ClinicManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedClinic, setSelectedClinic] = useState(null);
+  const [clinicToDelete, setClinicToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isDeleteOpen, 
+    onOpen: onDeleteOpen, 
+    onClose: onDeleteClose 
+  } = useDisclosure();
   const { user } = useAuth();
   const toast = useToast();
 
@@ -166,13 +175,18 @@ const ClinicManagement = () => {
   };
 
   // Handle deleting a clinic
-  const handleDeleteClinic = async (clinic) => {
-    if (!window.confirm(`Are you sure you want to delete "${clinic.name}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteClinic = (clinic) => {
+    setClinicToDelete(clinic);
+    onDeleteOpen();
+  };
 
+  // Confirm delete action
+  const confirmDelete = async () => {
+    if (!clinicToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await apiClient.delete(`/clinics/${clinic.id}`);
+      await apiClient.delete(`/clinics/${clinicToDelete.id}`);
       toast({
         title: 'Success',
         description: 'Clinic deleted successfully',
@@ -191,6 +205,10 @@ const ClinicManagement = () => {
         duration: 5000,
         isClosable: true,
       });
+    } finally {
+      setIsDeleting(false);
+      setClinicToDelete(null);
+      onDeleteClose();
     }
   };
 
@@ -199,7 +217,7 @@ const ClinicManagement = () => {
     try {
       if (selectedClinic) {
         // Update existing clinic
-        await apiClient.put(`/api/clinics/${selectedClinic.id}`, values);
+        await apiClient.put(`/clinics/${selectedClinic.id}`, values);
         toast({
           title: 'Success',
           description: 'Clinic updated successfully',
@@ -272,13 +290,6 @@ const ClinicManagement = () => {
               </Td>
               <Td>
                 <Flex>
-                  <IconButton
-                    icon={<FiEye />}
-                    aria-label="View clinic"
-                    mr={2}
-                    size="sm"
-                    variant="outline"
-                  />
                   {user.role === 'superadmin' && (
                     <>
                       <IconButton
@@ -320,6 +331,23 @@ const ClinicManagement = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteOpen}
+        onClose={onDeleteClose}
+        onConfirm={confirmDelete}
+        title="Delete Clinic"
+        message={
+          clinicToDelete 
+            ? `Are you sure you want to delete "${clinicToDelete.name}"? This action cannot be undone and will permanently remove all associated data.`
+            : 'Are you sure you want to delete this clinic?'
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </Box>
   );
 };

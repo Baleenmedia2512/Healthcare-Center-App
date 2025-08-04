@@ -66,6 +66,7 @@ import { useAppContext } from '../../context/AppContext';
 import { formatDate } from '../../utils/dataTransform';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import ConfirmationDialog from '../../components/common/ConfirmationDialog';
 
 // Placeholder components for tabs - these would be imported from their own files in a complete implementation
 
@@ -270,25 +271,10 @@ const PatientView = ({ patientId }) => {
             {/* Quick Investigation Summary */}
             <Box gridColumn={{ md: "1 / -1" }} mt={2}>
               <Divider my="3" borderColor="brand.100" />
-              <Flex alignItems="center" justifyContent="space-between">
-                <Text fontWeight="medium" color="brand.600" fontSize="md" display="flex" alignItems="center">
-                  <Icon as={FiFileText} mr="2" />
-                  Recent Investigations
-                </Text>
-                {canEdit && (
-                  <Button 
-                    size="xs" 
-                    bg="brand.100"
-                    color="gray.700"
-                    _hover={{ bg: "brand.200" }}
-                    leftIcon={<FiPlusCircle />}
-                    onClick={() => setIsAddModalOpen(true)}
-                    boxShadow="sm"
-                  >
-                    Add
-                  </Button>
-                )}
-              </Flex>
+              <Text fontWeight="medium" color="brand.600" fontSize="md" display="flex" alignItems="center" mb="2">
+                <Icon as={FiFileText} mr="2" />
+                Recent Investigations
+              </Text>
               
               <Box mt={2} bg="brand.50" p={3} borderRadius="md">
                 {patient.investigations && patient.investigations.length > 0 ? (
@@ -1236,6 +1222,9 @@ const InvestigationsTab = ({ patient, canEdit }) => {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // Filter for investigation types: 'all', 'blood', 'xray', etc.
   const [sortOrder, setSortOrder] = useState('desc'); // Sort order: 'asc' or 'desc'
+  const [investigationToDelete, setInvestigationToDelete] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
   const { investigationsAPI } = useAppContext();
   const [investigations, setInvestigations] = useState([]);
@@ -1338,31 +1327,48 @@ const InvestigationsTab = ({ patient, canEdit }) => {
     return filtered;
   }, [investigations, filter, sortOrder]);
 
-  // Delete an investigation
-  const handleDeleteInvestigation = async (id) => {
-    if (window.confirm('Are you sure you want to delete this investigation?')) {
-      try {
-        console.log('Deleting investigation with ID:', id);
-        await investigationsAPI.deleteInvestigation(id);
-        setInvestigations(investigations.filter(inv => inv.id !== id));
-        toast({
-          title: "Investigation deleted",
-          description: "The investigation has been successfully deleted.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        console.error('Error deleting investigation:', error);
-        toast({
-          title: "Error deleting investigation",
-          description: error.message || "Could not delete investigation",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+  // Show delete confirmation dialog
+  const handleDeleteClick = (investigation) => {
+    setInvestigationToDelete(investigation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Handle confirmed deletion
+  const handleConfirmDelete = async () => {
+    if (!investigationToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      console.log('Deleting investigation with ID:', investigationToDelete.id);
+      await investigationsAPI.deleteInvestigation(investigationToDelete.id);
+      setInvestigations(investigations.filter(inv => inv.id !== investigationToDelete.id));
+      toast({
+        title: "Investigation deleted",
+        description: "The investigation has been successfully deleted.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsDeleteDialogOpen(false);
+      setInvestigationToDelete(null);
+    } catch (error) {
+      console.error('Error deleting investigation:', error);
+      toast({
+        title: "Error deleting investigation",
+        description: error.message || "Could not delete investigation",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // Handle delete dialog cancel
+  const handleCancelDelete = () => {
+    setInvestigationToDelete(null);
+    setIsDeleteDialogOpen(false);
   };
 
   // Edit an investigation
@@ -1592,7 +1598,7 @@ const InvestigationsTab = ({ patient, canEdit }) => {
                                 bg="brand.400"
                                 color="white"
                                 _hover={{ bg: "brand.500" }}
-                                onClick={() => handleDeleteInvestigation(investigation.id)}
+                                onClick={() => handleDeleteClick(investigation)}
                                 title="Delete Investigation"
                               />
                             </>
@@ -1620,6 +1626,19 @@ const InvestigationsTab = ({ patient, canEdit }) => {
         patientId={patient.id}
         investigation={currentInvestigation}
         onSave={handleInvestigationSaved}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Investigation"
+        message={`Are you sure you want to delete the investigation "${investigationToDelete?.name || investigationToDelete?.type}"? This action cannot be undone and will permanently remove all associated data.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
       />
     </>
   );

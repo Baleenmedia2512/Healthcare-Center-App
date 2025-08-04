@@ -24,6 +24,7 @@ import {
   Select,
   VStack,
   HStack,
+  Flex,
   useToast,
   Badge,
   IconButton,
@@ -311,6 +312,7 @@ const UserManagement = ({
                   <Th>Name</Th>
                   <Th>Email</Th>
                   <Th>Role</Th>
+                  {restrictedRole === 'branchadmin' && <Th>Branch</Th>}
                   <Th>Status</Th>
                   <Th>Actions</Th>
                 </Tr>
@@ -325,20 +327,26 @@ const UserManagement = ({
                         {user.role.toUpperCase()}
                       </Badge>
                     </Td>
+                    {restrictedRole === 'branchadmin' && (
+                      <Td>
+                        {user.branchName || user.branch?.name || 'No Branch Assigned'}
+                      </Td>
+                    )}
                     <Td>
                       <Badge colorScheme={user.isActive ? 'green' : 'red'} size="sm">
                         {user.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </Td>
                     <Td>
-                      <HStack>
+                      <Flex>
                         <IconButton
                           icon={<FiEdit />}
-                          size="sm"
-                          onClick={() => handleEdit(user)}
                           aria-label="Edit user"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(user)}
                         />
-                      </HStack>
+                      </Flex>
                     </Td>
                   </Tr>
                 ))}
@@ -436,19 +444,22 @@ const UserManagement = ({
                   </Select>
                 </FormControl>
 
-                <FormControl isRequired={['branchadmin', 'doctor'].includes(formData.role)}>
-                  <FormLabel>Branch</FormLabel>
-                  <Select
-                    value={formData.branchId}
-                    onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                    placeholder="Select branch"
-                    isDisabled={!formData.clinicId || loadingTenants || ['superadmin', 'clinicadmin'].includes(formData.role) || session?.user?.role === 'branchadmin'}
-                  >
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>{branch.name}</option>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Only show branch field if not managing clinic admins specifically */}
+                {restrictedRole !== 'clinicadmin' && (
+                  <FormControl isRequired={['branchadmin', 'doctor'].includes(formData.role)}>
+                    <FormLabel>Branch</FormLabel>
+                    <Select
+                      value={formData.branchId}
+                      onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+                      placeholder="Select branch"
+                      isDisabled={!formData.clinicId || loadingTenants || ['superadmin', 'clinicadmin'].includes(formData.role) || session?.user?.role === 'branchadmin'}
+                    >
+                      {branches.map((branch) => (
+                        <option key={branch.id} value={branch.id}>{branch.name}</option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
               </VStack>
             </ModalBody>
 

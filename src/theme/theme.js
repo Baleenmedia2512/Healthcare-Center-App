@@ -169,32 +169,33 @@ const components = {
       },
     },
     variants: {
-      simple: {
+      simple: (props) => ({
         th: {
           borderBottom: '2px solid',
-          borderColor: 'gray.200',
+          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
           fontWeight: 'semibold',
           textTransform: 'uppercase',
           fontSize: 'xs',
           letterSpacing: 'wider',
-          color: 'gray.600',
-          bg: 'gray.50',
+          color: props.colorMode === 'dark' ? 'gray.100' : 'gray.600',
+          bg: props.colorMode === 'dark' ? 'gray.700' : 'gray.50',
         },
         td: {
           borderBottom: '1px solid',
-          borderColor: 'gray.200',
+          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+          color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
           _hover: {
-            bg: 'gray.50',
+            bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.50',
           },
         },
         tbody: {
           tr: {
             _hover: {
-              bg: 'gray.50',
+              bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.50',
             },
           },
         },
-      },
+      }),
     },
   },
   Card: {
@@ -211,12 +212,12 @@ const theme = extendTheme({
   fonts,
   components,
   styles: {
-    global: {
+    global: (props) => ({
       body: {
-        bg: 'gray.50',
-        color: 'gray.800',
+        bg: props.colorMode === 'dark' ? 'gray.900' : 'gray.50',
+        color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
       },
-    },
+    }),
   },
 });
 

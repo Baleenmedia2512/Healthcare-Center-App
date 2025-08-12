@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   
-  // Only users with admin roles can access user management
-  const validRoles = ['superadmin', 'clinicadmin', 'branchadmin', 'admin'];
+  // Only users with admin roles can access user management, plus doctors can see other doctors
+  const validRoles = ['superadmin', 'clinicadmin', 'branchadmin', 'admin', 'doctor'];
   if (!validRoles.includes(session.user.role)) {
     return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
   }
@@ -45,6 +45,16 @@ export default async function handler(req, res) {
             if (session.user.branchId) {
               queryParams.where = {
                 branchId: session.user.branchId
+              };
+            }
+            break;
+            
+          case 'doctor':
+            // Doctors can see other doctors in their branch (for investigation assignment)
+            if (session.user.branchId) {
+              queryParams.where = {
+                branchId: session.user.branchId,
+                role: 'doctor' // Only show doctors, not other users
               };
             }
             break;

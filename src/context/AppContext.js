@@ -21,22 +21,23 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isApiHealthy, setIsApiHealthy] = useState(true);
   
-  // User related data
-  const [currentUser] = useState({
-    id: '1',
-    name: 'Dr. John Doe',
-    role: 'doctor',
-  });
-  
-  // Doctor data
-  const [doctors] = useState([
-    { id: '1', name: 'Dr. John Doe', specialty: 'General Medicine' },
-    { id: '2', name: 'Dr. Jane Smith', specialty: 'Pediatrics' },
-    { id: '3', name: 'Dr. Robert Johnson', specialty: 'Orthopedics' },
-  ]);
-
   // Get authentication state from AuthContext
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: sessionUser } = useAuth();
+  
+  // Use real user data from session instead of hardcoded data
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // Doctor data - this should be fetched from API based on user's branch
+  const [doctors, setDoctors] = useState([]);
+
+  // Update current user when session changes
+  useEffect(() => {
+    if (sessionUser) {
+      setCurrentUser(sessionUser);
+    } else {
+      setCurrentUser(null);
+    }
+  }, [sessionUser]);
 
   // Error handling utility
   const handleError = useCallback((error, operation) => {
@@ -108,14 +109,50 @@ export const AppProvider = ({ children }) => {
     }
   }, [isAuthenticated, handleError]);
 
+  // Load doctors data from API (users with role 'doctor')
+  const fetchDoctors = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await fetch('/api/users');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Filter for users with role 'doctor' and ensure they have required fields
+      const doctorUsers = data.filter(user => 
+        user.role === 'doctor' && 
+        user.isActive && 
+        user.fullName
+      ).map(user => ({
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        branchId: user.branchId,
+        specialty: user.specialty || 'General Medicine' // Default specialty if not available
+      }));
+      
+      setDoctors(doctorUsers);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch doctors:", err);
+      if (err.response?.status !== 401) {
+        handleError(err, 'fetch doctors');
+      }
+    }
+  }, [isAuthenticated, handleError]);
+
   // Initial data load
   useEffect(() => {
     if (isAuthenticated) {
       checkApiHealth();
       fetchPatients();
       fetchInvestigations();
+      fetchDoctors();
     }
-  }, [isAuthenticated, fetchPatients, fetchInvestigations, checkApiHealth]);
+  }, [isAuthenticated, fetchPatients, fetchInvestigations, fetchDoctors, checkApiHealth]);
 
   // Add a new patient
   const addPatient = async (patientData) => {

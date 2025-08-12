@@ -76,7 +76,7 @@ const validateAndSanitizePatientData = (data) => {
   // Create default values for optional JSON fields
   const defaultMedicalHistory = {
     pastHistory: {
-      allergy: false, anemia: false, arthritis: false, asthma: false,
+      allergy: false, commonNotes: '', anemia: false, arthritis: false, asthma: false,
       cancer: false, diabetes: false, heartDisease: false, hypertension: false,
       thyroid: false, tuberculosis: false
     },
@@ -283,6 +283,7 @@ export default async function handler(req, res) {
             {
               pastHistory: {
                 allergy: false,
+                commonNotes: '',
                 anemia: false,
                 arthritis: false,
                 asthma: false,

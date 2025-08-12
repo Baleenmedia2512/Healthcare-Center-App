@@ -60,10 +60,9 @@ export const InvestigationService = {
   
   // Create new investigation with proper date handling
   createInvestigation: async (investigationData) => {
-    // Make sure date fields are properly formatted and remove doctor field
-    const { doctor, ...dataWithoutDoctor } = investigationData;
+    // Make sure date fields are properly formatted
     const formattedData = {
-      ...dataWithoutDoctor,
+      ...investigationData,
       date: investigationData.date ? new Date(investigationData.date).toISOString() : new Date().toISOString(),
       followUpDate: investigationData.followUpNeeded && investigationData.followUpDate ? 
         new Date(investigationData.followUpDate).toISOString() : null

@@ -24,6 +24,7 @@ import {
   StatHelpText,
   Icon,
   HStack,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import {
   FiBarChart2,
@@ -67,45 +68,58 @@ const Reports = () => {
   
   // Render different report types
   const renderReport = () => {
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const borderCol = useColorModeValue('gray.200', 'gray.700');
+    const labelColor = useColorModeValue('gray.600', 'gray.300');
+    const statColor = useColorModeValue('gray.800', 'gray.100');
+    const helpTextColor = useColorModeValue('gray.500', 'gray.400');
+    const tableHeadBg = useColorModeValue('gray.50', 'gray.700');
+    const tableHeadColor = useColorModeValue('gray.600', 'gray.100');
+    const tableRowBg = useColorModeValue('white', 'gray.800');
+    const tableRowAltBg = useColorModeValue('gray.50', 'gray.700');
+    const tableTextColor = useColorModeValue('gray.800', 'gray.100');
+    const cardHeaderBg = useColorModeValue('brand.50', 'gray.700');
+    const infoTextColor = useColorModeValue('gray.600', 'gray.400');
     switch (reportType) {
       case 'patient':
         return (
           <Box>
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing="6" mb="6">
+              {/* Total Patients */}
               <Stat
                 px="6"
                 py="4"
                 shadow="md"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={borderCol}
                 rounded="lg"
-                bg="white"
+                bg={cardBg}
               >
                 <Flex justifyContent="space-between">
                   <Box>
-                    <StatLabel fontWeight="medium">Total Patients</StatLabel>
-                    <StatNumber fontSize="2xl">{totalPatients}</StatNumber>
+                    <StatLabel fontWeight="medium" color={labelColor}>Total Patients</StatLabel>
+                    <StatNumber fontSize="2xl" color={statColor}>{totalPatients}</StatNumber>
                   </Box>
                   <Box my="auto" color="brand.500">
                     <Icon as={FiUsers} w={8} h={8} />
                   </Box>
                 </Flex>
               </Stat>
-              
+              {/* Male Patients */}
               <Stat
                 px="6"
                 py="4"
                 shadow="md"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={borderCol}
                 rounded="lg"
-                bg="white"
+                bg={cardBg}
               >
                 <Flex justifyContent="space-between">
                   <Box>
-                    <StatLabel fontWeight="medium">Male Patients</StatLabel>
-                    <StatNumber fontSize="2xl">{malePatients}</StatNumber>
-                    <StatHelpText mb={0}>
+                    <StatLabel fontWeight="medium" color={labelColor}>Male Patients</StatLabel>
+                    <StatNumber fontSize="2xl" color={statColor}>{malePatients}</StatNumber>
+                    <StatHelpText mb={0} color={helpTextColor}>
                       {totalPatients ? Math.round((malePatients / totalPatients) * 100) : 0}%
                     </StatHelpText>
                   </Box>
@@ -114,21 +128,21 @@ const Reports = () => {
                   </Box>
                 </Flex>
               </Stat>
-              
+              {/* Female Patients */}
               <Stat
                 px="6"
                 py="4"
                 shadow="md"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={borderCol}
                 rounded="lg"
-                bg="white"
+                bg={cardBg}
               >
                 <Flex justifyContent="space-between">
                   <Box>
-                    <StatLabel fontWeight="medium">Female Patients</StatLabel>
-                    <StatNumber fontSize="2xl">{femalePatients}</StatNumber>
-                    <StatHelpText mb={0}>
+                    <StatLabel fontWeight="medium" color={labelColor}>Female Patients</StatLabel>
+                    <StatNumber fontSize="2xl" color={statColor}>{femalePatients}</StatNumber>
+                    <StatHelpText mb={0} color={helpTextColor}>
                       {totalPatients ? Math.round((femalePatients / totalPatients) * 100) : 0}%
                     </StatHelpText>
                   </Box>
@@ -137,21 +151,21 @@ const Reports = () => {
                   </Box>
                 </Flex>
               </Stat>
-              
+              {/* New This Month */}
               <Stat
                 px="6"
                 py="4"
                 shadow="md"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={borderCol}
                 rounded="lg"
-                bg="white"
+                bg={cardBg}
               >
                 <Flex justifyContent="space-between">
                   <Box>
-                    <StatLabel fontWeight="medium">New This Month</StatLabel>
-                    <StatNumber fontSize="2xl">2</StatNumber>
-                    <StatHelpText mb={0}>
+                    <StatLabel fontWeight="medium" color={labelColor}>New This Month</StatLabel>
+                    <StatNumber fontSize="2xl" color={statColor}>2</StatNumber>
+                    <StatHelpText mb={0} color={helpTextColor}>
                       Since {new Date().toLocaleString('default', { month: 'long' })} 1
                     </StatHelpText>
                   </Box>
@@ -161,73 +175,105 @@ const Reports = () => {
                 </Flex>
               </Stat>
             </SimpleGrid>
-            
-            <Card>
-              <CardHeader bg="brand.50" py="3">
-                <Heading size="md">Patient Demographics Report</Heading>
+            {/* Patient Demographics Table */}
+            <Card bg={cardBg} borderColor={borderCol}>
+              <CardHeader bg={cardHeaderBg} py="3">
+                <Heading size="md" color={statColor}>Patient Demographics Report</Heading>
               </CardHeader>
               <CardBody p="0">
                 <TableContainer>
                   <Table variant="simple">
-                    <Thead bg="gray.50">
+                    <Thead bg={tableHeadBg}>
                       <Tr>
-                        <Th>Parameter</Th>
-                        <Th isNumeric>Count</Th>
-                        <Th isNumeric>Percentage</Th>
+                        <Th color={tableHeadColor} borderColor={borderCol}>Parameter</Th>
+                        <Th isNumeric color={tableHeadColor} borderColor={borderCol}>Count</Th>
+                        <Th isNumeric color={tableHeadColor} borderColor={borderCol}>Percentage</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
-                      <Tr>
-                        <Td fontWeight="medium">Total Patients</Td>
-                        <Td isNumeric>{totalPatients}</Td>
-                        <Td isNumeric>100%</Td>
+                      <Tr 
+                        bg={tableRowBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td fontWeight="medium" borderColor={borderCol}>Total Patients</Td>
+                        <Td isNumeric borderColor={borderCol}>{totalPatients}</Td>
+                        <Td isNumeric borderColor={borderCol}>100%</Td>
                       </Tr>
-                      <Tr>
-                        <Td>Male</Td>
-                        <Td isNumeric>{malePatients}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowAltBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Male</Td>
+                        <Td isNumeric borderColor={borderCol}>{malePatients}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((malePatients / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Female</Td>
-                        <Td isNumeric>{femalePatients}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Female</Td>
+                        <Td isNumeric borderColor={borderCol}>{femalePatients}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((femalePatients / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Other</Td>
-                        <Td isNumeric>{otherPatients}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowAltBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Other</Td>
+                        <Td isNumeric borderColor={borderCol}>{otherPatients}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((otherPatients / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Age 0-18</Td>
-                        <Td isNumeric>{patients.filter(p => p.age < 18).length}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Age 0-18</Td>
+                        <Td isNumeric borderColor={borderCol}>{patients.filter(p => p.age < 18).length}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((patients.filter(p => p.age < 18).length / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Age 19-40</Td>
-                        <Td isNumeric>{patients.filter(p => p.age >= 18 && p.age <= 40).length}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowAltBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Age 19-40</Td>
+                        <Td isNumeric borderColor={borderCol}>{patients.filter(p => p.age >= 18 && p.age <= 40).length}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((patients.filter(p => p.age >= 18 && p.age <= 40).length / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Age 41-60</Td>
-                        <Td isNumeric>{patients.filter(p => p.age > 40 && p.age <= 60).length}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Age 41-60</Td>
+                        <Td isNumeric borderColor={borderCol}>{patients.filter(p => p.age > 40 && p.age <= 60).length}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((patients.filter(p => p.age > 40 && p.age <= 60).length / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
-                      <Tr>
-                        <Td>Age 60+</Td>
-                        <Td isNumeric>{patients.filter(p => p.age > 60).length}</Td>
-                        <Td isNumeric>
+                      <Tr 
+                        bg={tableRowAltBg} 
+                        color={tableTextColor}
+                        _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                      >
+                        <Td borderColor={borderCol}>Age 60+</Td>
+                        <Td isNumeric borderColor={borderCol}>{patients.filter(p => p.age > 60).length}</Td>
+                        <Td isNumeric borderColor={borderCol}>
                           {totalPatients ? Math.round((patients.filter(p => p.age > 60).length / totalPatients) * 100) : 0}%
                         </Td>
                       </Tr>
@@ -236,9 +282,8 @@ const Reports = () => {
                 </TableContainer>
               </CardBody>
             </Card>
-            
             <Box mt="6">
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color={infoTextColor}>
                 * In a real application, this section would include interactive charts and graphs 
                 showing patient demographics, age distribution, and more detailed analytics.
               </Text>

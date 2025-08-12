@@ -34,6 +34,7 @@ import {
   CardBody,
   Divider,
   Spinner,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { FiPlus, FiEdit, FiUsers } from 'react-icons/fi';
 import { UserService } from '../../lib/api';
@@ -292,7 +293,7 @@ const UserManagement = ({
               <FiUsers size={24} />
               <Box>
                 <Heading size="lg">{title}</Heading>
-                <Text fontSize="sm" color="gray.600">{description}</Text>
+                <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>{description}</Text>
               </Box>
             </HStack>
             <Button leftIcon={<FiPlus />} colorScheme="brand" onClick={onOpen}>

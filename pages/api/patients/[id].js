@@ -51,6 +51,7 @@ export default async function handler(req, res) {
         const medicalHistory = patient.medicalHistory ? JSON.parse(patient.medicalHistory) : {
           pastHistory: {
             allergy: false,
+            commonNotes: '',
             anemia: false,
             arthritis: false,
             asthma: false,

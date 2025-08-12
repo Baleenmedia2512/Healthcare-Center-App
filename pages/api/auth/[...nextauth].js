@@ -82,6 +82,16 @@ export const authOptions = {
         session.user.branchId = token.branchId;
         session.user.clinicName = token.clinicName;
         session.user.branchName = token.branchName;
+        
+        // Debug logging
+        console.log('Session callback - user data:', {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          role: session.user.role,
+          branchId: session.user.branchId,
+          clinicId: session.user.clinicId
+        });
       }
       return session;
     },

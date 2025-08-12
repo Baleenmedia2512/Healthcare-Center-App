@@ -44,6 +44,7 @@ import {
   Textarea,
   IconButton,
   Switch,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -199,9 +200,9 @@ const PatientView = ({ patientId }) => {
       </Flex>
       
       {/* Patient Overview Card */}
-      <Card mb="6" boxShadow="md">
-        <CardHeader bgGradient="linear(to-r, brand.100, brand.200)" py="4" borderTopRadius="lg">
-          <Heading size="md" color="gray.700">Patient Overview</Heading>
+      <Card mb="6" boxShadow="md" bg={useColorModeValue('white', 'gray.800')}>
+        <CardHeader bg={useColorModeValue('secondary.200', 'secondary.700')} py="4" borderTopRadius="lg">
+          <Heading size="md" color={useColorModeValue('gray.700', 'gray.100')}>Patient Overview</Heading>
         </CardHeader>
         <CardBody>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
@@ -216,14 +217,14 @@ const PatientView = ({ patientId }) => {
                 borderColor="brand.100"
               />
               <Box>
-                <Heading size="md" color="brand.600">{patient.name}</Heading>
+                <Heading size="md" color={useColorModeValue('brand.600', 'brand.200')}>{patient.name}</Heading>
                 <HStack mt="2">
                   <Text color="gray.600" fontSize="sm">ID: </Text>
-                  <Text fontWeight="semibold" fontFamily="mono" fontSize="sm" bg="brand.50" px={2} py={1} borderRadius="md">{patient.id.substring(0, 8)}</Text>
+                  <Text fontWeight="semibold" fontFamily="mono" fontSize="sm" bg={useColorModeValue('brand.50', 'gray.700')} color={useColorModeValue('gray.700', 'gray.100')} px={2} py={1} borderRadius="md">{patient.id.substring(0, 8)}</Text>
                 </HStack>
                 <HStack mt="2" spacing={3}>
-                  <Badge bg="brand.300" color="white" py={1} px={2} borderRadius="md">{patient.sex}</Badge>
-                  <Badge bg="brand.400" color="white" py={1} px={2} borderRadius="md">{patient.age} years</Badge>
+                  <Badge bg={useColorModeValue('brand.300', 'brand.700')} color="white" py={1} px={2} borderRadius="md">{patient.sex}</Badge>
+                  <Badge bg={useColorModeValue('brand.400', 'brand.800')} color="white" py={1} px={2} borderRadius="md">{patient.age} years</Badge>
                 </HStack>
                 {patient.investigations && patient.investigations.length > 0 && (
                   <Badge bg="brand.200" color="gray.700" mt={2} py={1} px={2} borderRadius="md">
@@ -265,7 +266,7 @@ const PatientView = ({ patientId }) => {
                 <Icon as={FiFileText} mr="2" />
                 Chief Complaints
               </Text>
-              <Text bg="brand.50" p={3} borderRadius="md">{patient.chiefComplaints}</Text>
+              <Text bg={useColorModeValue('brand.50', 'gray.700')} color={useColorModeValue('gray.800', 'gray.100')} p={3} borderRadius="md">{patient.chiefComplaints}</Text>
             </Box>
             
             {/* Quick Investigation Summary */}
@@ -276,7 +277,7 @@ const PatientView = ({ patientId }) => {
                 Recent Investigations
               </Text>
               
-              <Box mt={2} bg="brand.50" p={3} borderRadius="md">
+              <Box mt={2} bg={useColorModeValue('brand.50', 'gray.700')} p={3} borderRadius="md">
                 {patient.investigations && patient.investigations.length > 0 ? (
                   <HStack spacing={2} flexWrap="wrap">
                     {patient.investigations.slice(0, 3).map(inv => (
@@ -299,7 +300,7 @@ const PatientView = ({ patientId }) => {
                     )}
                   </HStack>
                 ) : (
-                  <Text fontSize="sm" color="gray.500">No investigations recorded yet</Text>
+                  <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.300')}>No investigations recorded yet</Text>
                 )}
               </Box>
             </Box>
@@ -308,18 +309,23 @@ const PatientView = ({ patientId }) => {
       </Card>
       
       {/* Patient Tabs */}
-      <Tabs isLazy colorScheme="brand" defaultIndex={0} boxShadow="md" bg="white" borderRadius="lg" p="4">
-        <TabList overflowX="auto" flexWrap="nowrap" py="2" borderBottom="2px" borderColor="brand.200">
-          <Tab fontWeight="medium" _selected={{ color: "brand.600", borderColor: "brand.300", bg: "brand.50" }}>Investigations & Reports</Tab>
-          <Tab _selected={{ color: "brand.600", borderColor: "brand.300", bg: "brand.50" }}>Medical History</Tab>
-          <Tab _selected={{ color: "brand.600", borderColor: "brand.300", bg: "brand.50" }}>Physical Generals</Tab>
-          {patient.sex === 'Female' && <Tab _selected={{ color: "brand.600", borderColor: "brand.300", bg: "brand.50" }}>Menstrual History</Tab>}
-          <Tab _selected={{ color: "brand.600", borderColor: "brand.300", bg: "brand.50" }}>Food & Habits</Tab>
+  <Tabs isLazy colorScheme="brand" defaultIndex={0} boxShadow="md" bg={useColorModeValue('white', 'gray.800')} borderRadius="lg" p="4">
+        <TabList overflowX="auto" flexWrap="nowrap" py="2" borderBottom="2px" borderColor={useColorModeValue('brand.200', 'brand.700')}>
+          <Tab fontWeight="medium" _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Clinical Overview</Tab>
+          <Tab fontWeight="medium" _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Investigations & Reports</Tab>
+          <Tab _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Medical History</Tab>
+          <Tab _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Physical Generals</Tab>
+          {patient.sex === 'Female' && <Tab _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Menstrual History</Tab>}
+          <Tab _selected={{ color: useColorModeValue('brand.600', 'brand.200'), borderColor: useColorModeValue('brand.300', 'brand.700'), bg: useColorModeValue('brand.50', 'gray.700') }}>Food & Habits</Tab>
         </TabList>
         
         <TabPanels mt="4">
           <TabPanel p="0">
-            <InvestigationsTab patient={patient} canEdit={canEdit} />
+            <PatientSummaryTab patient={patient} />
+          </TabPanel>
+          
+          <TabPanel p="0">
+            <InvestigationsTab patient={patient} canEdit={canEdit} doctors={doctors} currentUser={currentUser} />
           </TabPanel>
           
           <TabPanel p="0">
@@ -412,7 +418,8 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
       chiefComplaints: patient.chiefComplaints || '',
       
       // Medical History - Past History
-      pastAllergy: patient.medicalHistory?.pastHistory?.allergy || false,
+  pastAllergy: patient.medicalHistory?.pastHistory?.allergy || false,
+  commonNotes: patient.medicalHistory?.pastHistory?.commonNotes || '',
       pastAnemia: patient.medicalHistory?.pastHistory?.anemia || false,
       pastArthritis: patient.medicalHistory?.pastHistory?.arthritis || false,
       pastAsthma: patient.medicalHistory?.pastHistory?.asthma || false,
@@ -423,7 +430,7 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
       pastThyroid: patient.medicalHistory?.pastHistory?.thyroid || false,
       pastTuberculosis: patient.medicalHistory?.pastHistory?.tuberculosis || false,
       
-      // Medical History - Family History
+  // Medical History - Family History
       familyDiabetes: patient.medicalHistory?.familyHistory?.diabetes || false,
       familyHypertension: patient.medicalHistory?.familyHistory?.hypertension || false,
       familyThyroid: patient.medicalHistory?.familyHistory?.thyroid || false,
@@ -451,7 +458,7 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
       foodAddictions: patient.foodAndHabit?.addictions || '',
     },
     validationSchema,
-    onSubmit: async (values) => {
+  onSubmit: async (values) => {
       try {
         // Build the updated patient object with all fields
         const updatedPatient = {
@@ -465,11 +472,11 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
           occupation: values.occupation || '',
           mobileNumber: values.mobileNumber,
           chiefComplaints: values.chiefComplaints,
-          
           // Medical history
           medicalHistory: {
             pastHistory: {
               allergy: values.pastAllergy,
+              commonNotes: values.commonNotes,
               anemia: values.pastAnemia,
               arthritis: values.pastArthritis,
               asthma: values.pastAsthma,
@@ -542,10 +549,10 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxH="90vh">
         <ModalHeader>Edit Patient Information</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody overflowY="auto" maxH="calc(90vh - 120px)">
           <form onSubmit={formik.handleSubmit}>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
               <FormControl isRequired isInvalid={formik.touched.name && formik.errors.name}>
@@ -779,6 +786,27 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
                           <FormLabel htmlFor="pastTuberculosis" mb={0}>Tuberculosis</FormLabel>
                         </FormControl>
                       </SimpleGrid>
+                      
+                      {/* Common Additional Notes Section - shows when any past history is selected */}
+                      {(formik.values.pastAllergy || formik.values.pastAnemia || formik.values.pastArthritis || 
+                        formik.values.pastAsthma || formik.values.pastCancer || formik.values.pastDiabetes || 
+                        formik.values.pastHeartDisease || formik.values.pastHypertension || formik.values.pastThyroid || 
+                        formik.values.pastTuberculosis) && (
+                        <Box mt={4}>
+                          <FormControl>
+                            <FormLabel htmlFor="commonNotes">Additional Notes</FormLabel>
+                            <Textarea
+                              id="commonNotes"
+                              name="commonNotes"
+                              value={formik.values.commonNotes}
+                              onChange={formik.handleChange}
+                              placeholder="Enter additional notes about the medical history..."
+                              rows={3}
+                              bg={useColorModeValue('white', 'gray.700')}
+                            />
+                          </FormControl>
+                        </Box>
+                      )}
                       
                       <Divider my={4} />
                       
@@ -1035,6 +1063,200 @@ const PatientEditModal = ({ isOpen, onClose, patient, onSave }) => {
 
 // Tab components
 
+const PatientSummaryTab = ({ patient }) => {
+  // Helper function to check if a value exists and is not empty
+  const hasValue = (value) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (typeof value === 'object') return Object.keys(value).length > 0;
+    return Boolean(value);
+  };
+
+  // Collect only specific tab data
+  const summaryData = [];
+
+  // Medical History - Past History
+  const medicalHistory = patient.medicalHistory || {};
+  const pastHistory = medicalHistory.pastHistory || {};
+  const pastHistoryData = [];
+  
+  Object.entries(pastHistory).forEach(([key, value]) => {
+    if (key === 'commonNotes' && hasValue(value)) {
+      pastHistoryData.push({ label: 'Additional Notes', value: value });
+    } else if (key !== 'commonNotes' && value === true) {
+      pastHistoryData.push({ label: key.charAt(0).toUpperCase() + key.slice(1), value: 'Yes' });
+    }
+  });
+  
+  if (pastHistoryData.length > 0) {
+    summaryData.push({ section: 'Past Medical History', data: pastHistoryData });
+  }
+
+  // Family History
+  const familyHistory = medicalHistory.familyHistory || {};
+  const familyHistoryData = [];
+  
+  Object.entries(familyHistory).forEach(([key, value]) => {
+    if (value === true) {
+      familyHistoryData.push({ label: key.charAt(0).toUpperCase() + key.slice(1), value: 'Yes' });
+    }
+  });
+  
+  if (familyHistoryData.length > 0) {
+    summaryData.push({ section: 'Family History', data: familyHistoryData });
+  }
+
+  // Physical Generals
+  const physicalGenerals = patient.physicalGenerals || {};
+  const physicalGeneralsData = [];
+  
+  Object.entries(physicalGenerals).forEach(([key, value]) => {
+    if (hasValue(value)) {
+      const label = key === 'appetite' ? 'Appetite' :
+                   key === 'thirst' ? 'Thirst' :
+                   key === 'sleep' ? 'Sleep' :
+                   key === 'bowel' ? 'Bowel Habits' :
+                   key === 'urine' ? 'Urinary Habits' :
+                   key === 'sweating' ? 'Sweating' :
+                   key === 'addictions' ? 'Addictions' :
+                   key.charAt(0).toUpperCase() + key.slice(1);
+      physicalGeneralsData.push({ label, value });
+    }
+  });
+  
+  if (physicalGeneralsData.length > 0) {
+    summaryData.push({ section: 'Physical Generals', data: physicalGeneralsData });
+  }
+
+  // Menstrual History (for female patients only)
+  const menstrualHistoryData = [];
+  if (patient.sex === 'Female') {
+    const menstrualHistory = patient.menstrualHistory || {};
+    
+    Object.entries(menstrualHistory).forEach(([key, value]) => {
+      if (hasValue(value)) {
+        const label = key === 'menses' ? 'Menses' :
+                     key === 'menopause' ? 'Menopause' :
+                     key === 'leucorrhoea' ? 'Leucorrhoea' :
+                     key === 'gonorrhea' ? 'Gonorrhea' :
+                     key === 'otherDischarges' ? 'Other Discharges' :
+                     key.charAt(0).toUpperCase() + key.slice(1);
+        menstrualHistoryData.push({ label, value });
+      }
+    });
+    
+    if (menstrualHistoryData.length > 0) {
+      summaryData.push({ section: 'Menstrual History', data: menstrualHistoryData });
+    }
+  }
+
+  // Food & Habits
+  const foodAndHabit = patient.foodAndHabit || {};
+  const foodHabitsData = [];
+  
+  Object.entries(foodAndHabit).forEach(([key, value]) => {
+    if (hasValue(value)) {
+      const label = key === 'foodHabit' ? 'Food Habit' : 
+                   key === 'addictions' ? 'Food Addictions' :
+                   key.charAt(0).toUpperCase() + key.slice(1);
+      foodHabitsData.push({ label, value });
+    }
+  });
+  
+  if (foodHabitsData.length > 0) {
+    summaryData.push({ section: 'Food & Habits', data: foodHabitsData });
+  }
+
+  // Investigations & Reports - Show investigations regardless of other clinical data
+  if (patient.investigations && patient.investigations.length > 0) {
+    const investigationsData = patient.investigations.map((inv, index) => {
+      const details = [];
+      details.push(`Type: ${inv.type}`);
+      details.push(`Details: ${inv.details}`);
+      details.push(`Date: ${formatDate(inv.date)}`);
+      if (inv.doctor) details.push(`Doctor: ${inv.doctor}`);
+      if (inv.results) details.push(`Results: ${inv.results}`);
+      if (inv.normalRange) details.push(`Normal Range: ${inv.normalRange}`);
+      if (inv.notes) details.push(`Notes: ${inv.notes}`);
+      if (inv.fileUrl) details.push(`File: ${inv.fileUrl}`);
+      
+      return {
+        label: `Investigation ${index + 1}`,
+        value: details.join(' | ')
+      };
+    });
+    summaryData.push({ section: 'Investigations & Reports', data: investigationsData });
+  }
+
+  return (
+    <Card>
+      <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
+        <Heading size="md">Clinical Overview</Heading>
+        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mt={1}>
+          This tab shows the clinical information from Investigations, Medical History, Physical Generals and Food & Habits
+        </Text>
+      </CardHeader>
+      <CardBody>
+        {summaryData.length === 0 ? (
+          <Box textAlign="center" py={8}>
+            <Text color={useColorModeValue('gray.500', 'gray.400')} fontSize="lg" mb={2}>
+              No additional information available
+            </Text>
+            <Text color={useColorModeValue('gray.400', 'gray.500')} fontSize="sm">
+              Medical history, physical generals, food habits, and investigations have not been filled yet.
+            </Text>
+          </Box>
+        ) : (
+          <VStack spacing={6} align="stretch">
+            {summaryData.map((section, sectionIndex) => (
+              <Box key={sectionIndex}>
+                <Heading 
+                  size="sm" 
+                  mb={3} 
+                  color={useColorModeValue('brand.600', 'brand.200')}
+                  borderBottom="1px"
+                  borderColor={useColorModeValue('brand.200', 'brand.700')}
+                  pb={2}
+                >
+                  {section.section}
+                </Heading>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                  {section.data.map((item, itemIndex) => (
+                    <Box 
+                      key={itemIndex}
+                      p={3}
+                      borderRadius="md"
+                      bg={useColorModeValue('gray.50', 'gray.700')}
+                      border="1px"
+                      borderColor={useColorModeValue('gray.200', 'gray.600')}
+                    >
+                      <Text 
+                        fontWeight="bold" 
+                        fontSize="sm"
+                        color={useColorModeValue('gray.600', 'gray.400')}
+                        mb={1}
+                      >
+                        {item.label}:
+                      </Text>
+                      <Text 
+                        color={useColorModeValue('gray.800', 'gray.100')}
+                        fontSize="sm"
+                        lineHeight="1.4"
+                      >
+                        {item.value}
+                      </Text>
+                    </Box>
+                  ))}
+                </SimpleGrid>
+              </Box>
+            ))}
+          </VStack>
+        )}
+      </CardBody>
+    </Card>
+  );
+};
+
 const MedicalHistoryTab = ({ patient }) => {
   const medicalHistory = patient.medicalHistory || {
     pastHistory: {},
@@ -1043,7 +1265,7 @@ const MedicalHistoryTab = ({ patient }) => {
   
   return (
     <Card>
-      <CardHeader bg="brand.50" py="3">
+  <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
         <Heading size="md">Medical History</Heading>
       </CardHeader>
       <CardBody>
@@ -1053,32 +1275,38 @@ const MedicalHistoryTab = ({ patient }) => {
             <TableContainer>
               <Table variant="simple" size="sm">
                 <Tbody>
-                  {/*
-                    { key: 'allergy', label: 'Allergy' },
-                    { key: 'anemia', label: 'Anemia' },
-                    { key: 'arthritis', label: 'Arthritis' },
-                    { key: 'asthma', label: 'Asthma' },
-                    { key: 'cancer', label: 'Cancer' },
-                    { key: 'diabetes', label: 'Diabetes' },
-                    { key: 'heartDisease', label: 'Heart Disease' },
-                    { key: 'hypertension', label: 'Hypertension' },
-                    { key: 'thyroid', label: 'Thyroid' },
-                    { key: 'tuberculosis', label: 'Tuberculosis' }
-                  */}
-                  {Object.entries(medicalHistory.pastHistory).map(([key, value]) => (
-                    <Tr key={key}>
-                      <Td width="70%">{key.charAt(0).toUpperCase() + key.slice(1)}</Td>
-                      <Td>
-                        {value ? 
-                          <Badge colorScheme="red">Yes</Badge> : 
-                          <Badge colorScheme="green">No</Badge>
-                        }
-                      </Td>
-                    </Tr>
-                  ))}
+                  {Object.entries(medicalHistory.pastHistory).map(([key, value]) => {
+                    // Skip commonNotes as it will be shown separately
+                    if (key === 'commonNotes') return null;
+                    
+                    return (
+                      <Tr key={key}>
+                        <Td width="70%">{key.charAt(0).toUpperCase() + key.slice(1)}</Td>
+                        <Td>
+                          {value ? 
+                            <Badge colorScheme="red">Yes</Badge> : 
+                            <Badge colorScheme="green">No</Badge>
+                          }
+                        </Td>
+                      </Tr>
+                    );
+                  })}
                 </Tbody>
               </Table>
             </TableContainer>
+            
+            {/* Show common additional notes if any past history is present and notes exist */}
+            {(medicalHistory.pastHistory.allergy || medicalHistory.pastHistory.anemia || medicalHistory.pastHistory.arthritis || 
+              medicalHistory.pastHistory.asthma || medicalHistory.pastHistory.cancer || medicalHistory.pastHistory.diabetes || 
+              medicalHistory.pastHistory.heartDisease || medicalHistory.pastHistory.hypertension || medicalHistory.pastHistory.thyroid || 
+              medicalHistory.pastHistory.tuberculosis) && medicalHistory.pastHistory.commonNotes && (
+              <Box mt={4} p={3} borderRadius="md" bg={useColorModeValue('blue.50', 'blue.900')} border="1px" borderColor={useColorModeValue('blue.200', 'blue.700')}>
+                <Heading size="xs" mb={2} color={useColorModeValue('blue.600', 'blue.200')}>Additional Notes:</Heading>
+                <Text fontSize="sm" color={useColorModeValue('blue.800', 'blue.100')}>
+                  {medicalHistory.pastHistory.commonNotes}
+                </Text>
+              </Box>
+            )}
           </Box>
           
           <Box>
@@ -1121,7 +1349,7 @@ const PhysicalGeneralsTab = ({ patient }) => {
   
   return (
     <Card>
-      <CardHeader bg="brand.50" py="3">
+  <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
         <Heading size="md">Physical Generals</Heading>
       </CardHeader>
       <CardBody>
@@ -1147,7 +1375,7 @@ const MenstrualHistoryTab = ({ patient }) => {
   
   return (
     <Card>
-      <CardHeader bg="brand.50" py="3">
+  <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
         <Heading size="md">Menstrual History</Heading>
       </CardHeader>
       <CardBody>
@@ -1191,7 +1419,7 @@ const FoodHabitsTab = ({ patient }) => {
   
   return (
     <Card>
-      <CardHeader bg="brand.50" py="3">
+  <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
         <Heading size="md">Food & Habits</Heading>
       </CardHeader>
       <CardBody>
@@ -1214,7 +1442,7 @@ const FoodHabitsTab = ({ patient }) => {
   );
 };
 
-const InvestigationsTab = ({ patient, canEdit }) => {
+const InvestigationsTab = ({ patient, canEdit, doctors, currentUser }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentInvestigation, setCurrentInvestigation] = useState(null);
@@ -1435,25 +1663,25 @@ const InvestigationsTab = ({ patient, canEdit }) => {
         <CardBody>
           {/* Summary of patient investigations */}
           {investigations.length > 0 && (
-            <Box mb={6} p={5} borderRadius="lg" bg="white" boxShadow="sm" borderLeft="4px" borderColor="brand.300">
-              <Heading size="sm" mb={4} color="brand.600" fontWeight="600">Investigation Summary</Heading>
+            <Box mb={6} p={5} borderRadius="lg" bg={useColorModeValue('gray.50', 'gray.900')} boxShadow="sm" borderLeft="4px" borderColor={useColorModeValue('brand.300', 'brand.400')}> 
+              <Heading size="sm" mb={4} color={useColorModeValue('brand.600', 'brand.200')} fontWeight="600">Investigation Summary</Heading>
               <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                <Box bg="brand.50" p={3} borderRadius="md">
-                  <Text fontWeight="bold" fontSize="sm" color="gray.600">Total Investigations</Text>
-                  <Text fontSize="2xl" color="brand.600">{investigations.length}</Text>
+                <Box bg={useColorModeValue('brand.50', 'gray.800')} p={3} borderRadius="md">
+                  <Text fontWeight="bold" fontSize="sm" color={useColorModeValue('gray.600', 'gray.200')}>Total Investigations</Text>
+                  <Text fontSize="2xl" color={useColorModeValue('brand.600', 'brand.200')}>{investigations.length}</Text>
                 </Box>
-                <Box bg="brand.50" p={3} borderRadius="md">
-                  <Text fontWeight="bold" fontSize="sm" color="gray.600">Latest Investigation</Text>
-                  <Text fontWeight="medium">{investigations.length > 0 ? 
+                <Box bg={useColorModeValue('brand.50', 'gray.800')} p={3} borderRadius="md">
+                  <Text fontWeight="bold" fontSize="sm" color={useColorModeValue('gray.600', 'gray.200')}>Latest Investigation</Text>
+                  <Text fontWeight="medium" color={useColorModeValue('gray.700', 'gray.100')}>{investigations.length > 0 ? 
                     `By ${investigations[0].doctor || 'Unspecified'} (${formatDate(investigations[0].date)})` : 
                     'None'}
                   </Text>
                 </Box>
-                <Box bg="brand.50" p={3} borderRadius="md">
-                  <Text fontWeight="bold" fontSize="sm" color="gray.600">Doctors</Text>
+                <Box bg={useColorModeValue('brand.50', 'gray.800')} p={3} borderRadius="md">
+                  <Text fontWeight="bold" fontSize="sm" color={useColorModeValue('gray.600', 'gray.200')}>Doctors</Text>
                   <HStack flexWrap="wrap" spacing={2} mt={1}>
                     {Object.entries(investigationSummary).map(([doctor, count]) => (
-                      <Badge key={doctor} bg="brand.200" color="gray.700" py={1} px={2} borderRadius="md">
+                      <Badge key={doctor} bg={useColorModeValue('brand.200', 'brand.400')} color={useColorModeValue('gray.700', 'gray.900')} py={1} px={2} borderRadius="md">
                         {doctor}: {count}
                       </Badge>
                     ))}
@@ -1465,17 +1693,18 @@ const InvestigationsTab = ({ patient, canEdit }) => {
 
           {/* Filters and controls */}
           {investigations.length > 0 && (
-            <Flex mb={5} justify="space-between" align="center" flexWrap="wrap" gap={3} bg="brand.50" p={4} borderRadius="md" boxShadow="sm">
+            <Flex mb={5} justify="space-between" align="center" flexWrap="wrap" gap={3} bg={useColorModeValue('brand.50', 'gray.800')} p={4} borderRadius="md" boxShadow="sm">
               <HStack spacing={3}>
-                <Text fontWeight="medium" color="gray.600">Filter by Doctor:</Text>
+                <Text fontWeight="medium" color={useColorModeValue('gray.600', 'gray.200')}>Filter by Doctor:</Text>
                 <Select 
                   size="sm" 
                   width="180px" 
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  bg="white"
-                  borderColor="brand.200"
-                  _hover={{ borderColor: "brand.300" }}
+                  bg={useColorModeValue('white', 'gray.900')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _hover={{ borderColor: useColorModeValue('brand.300', 'brand.400') }}
                   boxShadow="sm"
                 >
                   {doctorNames.map(doctor => (
@@ -1485,17 +1714,17 @@ const InvestigationsTab = ({ patient, canEdit }) => {
                   ))}
                 </Select>
               </HStack>
-              
               <HStack spacing={3}>
-                <Text fontWeight="medium" color="gray.600">Sort:</Text>
+                <Text fontWeight="medium" color={useColorModeValue('gray.600', 'gray.200')}>Sort:</Text>
                 <Select 
                   size="sm" 
                   width="150px"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
-                  bg="white"
-                  borderColor="brand.200"
-                  _hover={{ borderColor: "brand.300" }}
+                  bg={useColorModeValue('white', 'gray.900')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _hover={{ borderColor: useColorModeValue('brand.300', 'brand.400') }}
                   boxShadow="sm"
                 >
                   <option value="desc">Newest First</option>
@@ -1522,9 +1751,9 @@ const InvestigationsTab = ({ patient, canEdit }) => {
               </Button>
             </Box>
           ) : filteredInvestigations.length === 0 ? (
-            <Box textAlign="center" py="8" px="4" bg="brand.50" borderRadius="lg" borderWidth="1px" borderColor="brand.100">
+            <Box textAlign="center" py="8" px="4" bg={useColorModeValue('brand.50', 'gray.700')} borderRadius="lg" borderWidth="1px" borderColor={useColorModeValue('brand.100', 'gray.600')}>
               <Icon as={FiFileText} boxSize="10" color="brand.300" mb={3} />
-              <Text fontWeight="medium" color="gray.700" fontSize="lg">
+              <Text fontWeight="medium" fontSize="lg" color={useColorModeValue('gray.700', 'gray.100')}>
                 {investigations.length > 0 ? 
                   'No investigations match the current filter.' : 
                   'No investigation reports added yet.'}
@@ -1544,34 +1773,68 @@ const InvestigationsTab = ({ patient, canEdit }) => {
               )}
             </Box>
           ) : (
-            <TableContainer borderRadius="lg" overflow="hidden" boxShadow="sm">
-              <Table variant="simple" bg="white">
-                <Thead bg="brand.50">
+            <TableContainer 
+              overflowX="auto"
+              w="100%"
+              sx={{
+                borderRadius: 'lg',
+                boxShadow: 'sm',
+                bg: useColorModeValue('white', 'gray.900'),
+                '&::-webkit-scrollbar': {
+                  height: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  bg: useColorModeValue('gray.100', 'gray.700'),
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  bg: useColorModeValue('gray.300', 'gray.500'),
+                  borderRadius: '4px',
+                },
+              }}
+            >
+              <Table 
+                variant="simple" 
+                bg={useColorModeValue('white', 'gray.900')} 
+                size="sm"
+                w="100%"
+                minW="900px"
+              >
+                <Thead bg={useColorModeValue('brand.50', 'gray.800')}>
                   <Tr>
-                    <Th borderColor="brand.200" color="gray.600">Date</Th>
-                    <Th borderColor="brand.200" color="gray.600">Doctor</Th>
-                    <Th borderColor="brand.200" color="gray.600">Details</Th>
-                    <Th borderColor="brand.200" color="gray.600" textAlign="center">Actions</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="120px">Date</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="150px">Doctor</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="200px">Details</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="200px">Additional Notes</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="120px" textAlign="center">Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {filteredInvestigations.map((investigation, index) => (
-                    <Tr key={investigation.id} bg={index % 2 === 0 ? 'white' : 'brand.50'} _hover={{ bg: 'brand.100' }}>
-                      <Td borderColor="gray.100">{formatDate(investigation.date)}</Td>
-                      <Td borderColor="gray.100">
-                        {investigation.doctor || <Text color="gray.400" as="i">Not specified</Text>}
+                    <Tr key={investigation.id} bg={useColorModeValue(index % 2 === 0 ? 'white' : 'brand.50', index % 2 === 0 ? 'gray.900' : 'gray.800')} _hover={{ bg: useColorModeValue('brand.100', 'gray.700') }}>
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} color={useColorModeValue('gray.700', 'gray.200')}>{formatDate(investigation.date)}</Td>
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} color={useColorModeValue('gray.700', 'gray.200')}>
+                        {investigation.doctor || <Text color={useColorModeValue('gray.400', 'gray.500')} as="i">Not specified</Text>}
                       </Td>
-                      <Td borderColor="gray.100" fontWeight="medium">{investigation.details}</Td>
-                      <Td borderColor="gray.100" textAlign="center">
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} fontWeight="medium" color={useColorModeValue('gray.700', 'gray.200')}>{investigation.details}</Td>
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} color={useColorModeValue('gray.700', 'gray.200')}>
+                        {investigation.notes ? (
+                          <Text noOfLines={2} title={investigation.notes}>
+                            {investigation.notes}
+                          </Text>
+                        ) : (
+                          <Text color={useColorModeValue('gray.400', 'gray.500')} as="i">No notes</Text>
+                        )}
+                      </Td>
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} textAlign="center">
                         <HStack spacing="2" justifyContent="center">
                           {investigation.fileUrl && (
                             <IconButton
                               aria-label="View file"
                               icon={<FiFileText />}
                               size="sm"
-                              bg="brand.100"
-                              color="gray.700"
-                              _hover={{ bg: "brand.200" }}
+                              bg={useColorModeValue('brand.100', 'brand.400')}
+                              color={useColorModeValue('gray.700', 'gray.900')}
+                              _hover={{ bg: useColorModeValue('brand.200', 'brand.500') }}
                               as="a"
                               href={investigation.fileUrl}
                               target="_blank"
@@ -1585,9 +1848,9 @@ const InvestigationsTab = ({ patient, canEdit }) => {
                                 aria-label="Edit investigation"
                                 icon={<FiEdit />}
                                 size="sm"
-                                bg="brand.100"
-                                color="gray.700"
-                                _hover={{ bg: "brand.200" }}
+                                bg={useColorModeValue('brand.100', 'brand.400')}
+                                color={useColorModeValue('gray.700', 'gray.900')}
+                                _hover={{ bg: useColorModeValue('brand.200', 'brand.500') }}
                                 onClick={() => handleEditInvestigation(investigation)}
                                 title="Edit Investigation"
                               />
@@ -1595,9 +1858,9 @@ const InvestigationsTab = ({ patient, canEdit }) => {
                                 aria-label="Delete investigation"
                                 icon={<FiTrash2 />}
                                 size="sm"
-                                bg="brand.400"
-                                color="white"
-                                _hover={{ bg: "brand.500" }}
+                                bg={useColorModeValue('brand.400', 'brand.600')}
+                                color={useColorModeValue('white', 'gray.100')}
+                                _hover={{ bg: useColorModeValue('brand.500', 'brand.700') }}
                                 onClick={() => handleDeleteClick(investigation)}
                                 title="Delete Investigation"
                               />
@@ -1626,6 +1889,8 @@ const InvestigationsTab = ({ patient, canEdit }) => {
         patientId={patient.id}
         investigation={currentInvestigation}
         onSave={handleInvestigationSaved}
+        doctors={doctors}
+        currentUser={currentUser}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -1646,7 +1911,7 @@ const InvestigationsTab = ({ patient, canEdit }) => {
 
 
 
-const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onSave }) => {
+const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onSave, doctors, currentUser }) => {
   const toast = useToast();
   const { investigationsAPI, addInvestigation } = useAppContext();
   const isEditing = !!investigation;
@@ -1680,8 +1945,6 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
           type: "General", // Set a default type since we removed the field
           date: new Date(values.date).toISOString()
         };
-        
-        console.log('Submitting investigation:', formattedValues);
         
         if (isEditing) {
           // Update existing investigation
@@ -1740,6 +2003,28 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
     },
   });
   
+  // Reset form values when investigation changes (for editing)
+  useEffect(() => {
+    if (investigation) {
+      formik.setValues({
+        details: investigation.details || '',
+        date: investigation.date ? new Date(investigation.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        fileUrl: investigation.fileUrl || '',
+        doctor: investigation.doctor || '',
+        notes: investigation.notes || ''
+      });
+    } else {
+      // Reset to default values for new investigation
+      formik.setValues({
+        details: '',
+        date: new Date().toISOString().split('T')[0],
+        fileUrl: '',
+        doctor: '',
+        notes: ''
+      });
+    }
+  }, [investigation]);
+  
   return (
     <Modal 
       isOpen={isOpen} 
@@ -1752,86 +2037,134 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
       closeOnOverlayClick={false}
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(5px)" />
-      <ModalContent borderRadius="lg" boxShadow="xl">
-        <ModalHeader bgGradient="linear(to-r, brand.100, brand.200)" borderTopRadius="lg" py={4}>
+      <ModalContent borderRadius="lg" boxShadow="xl" bg={useColorModeValue('white', 'gray.800')}>
+        <ModalHeader bgGradient={useColorModeValue('linear(to-r, brand.100, brand.200)', 'linear(to-r, gray.700, gray.800)')} borderTopRadius="lg" py={4}>
           <Flex align="center">
-            <Box color="brand.500" mr={2}>
+            <Box color={useColorModeValue('brand.500', 'brand.200')} mr={2}>
               {isEditing ? <FiEdit size={20} /> : <FiPlusCircle size={20} />}
             </Box>
-            <Text color="gray.700" fontWeight="bold">
+            <Text color={useColorModeValue('gray.700', 'gray.100')} fontWeight="bold">
               {isEditing ? 'Edit Investigation' : 'Add New Investigation'}
             </Text>
           </Flex>
         </ModalHeader>
         <ModalCloseButton 
-          color="gray.700" 
+          color={useColorModeValue('gray.700', 'gray.100')} 
           onClick={() => {
             formik.resetForm();
             onClose();
           }}
         />
-        
-        <ModalBody pt={6}>
+        <ModalBody pt={6} bg={useColorModeValue('white', 'gray.800')}>
           <form onSubmit={formik.handleSubmit}>
             <VStack spacing={4} align="stretch">
               {/* Date Field */}
               <FormControl isRequired isInvalid={formik.touched.date && formik.errors.date}>
-                <FormLabel htmlFor="date">Date</FormLabel>
+                <FormLabel htmlFor="date" color={useColorModeValue('gray.700', 'gray.100')}>Date</FormLabel>
                 <Input
                   id="date"
                   type="date"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _placeholder={{ color: useColorModeValue('gray.400', 'gray.400') }}
                   {...formik.getFieldProps('date')}
                 />
                 <FormErrorMessage>{formik.errors.date}</FormErrorMessage>
               </FormControl>
-              
               {/* Doctor Name Field */}
               <FormControl>
-                <FormLabel htmlFor="doctor">Doctor Name</FormLabel>
-                <Input
+                <FormLabel htmlFor="doctor" color={useColorModeValue('gray.700', 'gray.100')}>Doctor Name</FormLabel>
+                <Select
                   id="doctor"
-                  placeholder="Doctor who ordered/performed the investigation"
+                  placeholder="Select doctor who ordered/performed the investigation"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
                   {...formik.getFieldProps('doctor')}
-                />
+                >
+                  {(() => {
+                    if (doctors && doctors.length > 0) {
+                      // First try to filter by branch
+                      let filteredDoctors = doctors.filter(doctor => 
+                        currentUser && doctor.branchId === currentUser.branchId
+                      );
+                      
+                      // If no doctors found with branch filtering, try to find the current user as a doctor
+                      if (filteredDoctors.length === 0 && currentUser) {
+                        const currentUserAsDoctor = doctors.find(doctor => 
+                          doctor.email === currentUser.email || 
+                          doctor.name === currentUser.name ||
+                          doctor.id === currentUser.id
+                        );
+                        
+                        if (currentUserAsDoctor) {
+                          filteredDoctors = [currentUserAsDoctor];
+                        }
+                      }
+                      
+                      // If still no doctors, show all as fallback
+                      if (filteredDoctors.length === 0) {
+                        filteredDoctors = doctors;
+                      }
+                      
+                      return filteredDoctors.map(doctor => (
+                        <option key={doctor.id} value={doctor.name}>
+                          {doctor.name}
+                        </option>
+                      ));
+                    }
+                    
+                    return <option value="">No doctors loaded</option>;
+                  })()}
+                </Select>
               </FormControl>
-              
               {/* Details Field */}
               <FormControl isRequired isInvalid={formik.touched.details && formik.errors.details}>
-                <FormLabel htmlFor="details">Details</FormLabel>
+                <FormLabel htmlFor="details" color={useColorModeValue('gray.700', 'gray.100')}>Details</FormLabel>
                 <Textarea
                   id="details"
                   placeholder="Enter investigation details"
                   rows={3}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _placeholder={{ color: useColorModeValue('gray.400', 'gray.400') }}
                   {...formik.getFieldProps('details')}
                 />
                 <FormErrorMessage>{formik.errors.details}</FormErrorMessage>
               </FormControl>
-              
               {/* Additional Notes Field (Optional) */}
               <FormControl>
-                <FormLabel htmlFor="notes">Additional Notes (Optional)</FormLabel>
+                <FormLabel htmlFor="notes" color={useColorModeValue('gray.700', 'gray.100')}>Additional Notes (Optional)</FormLabel>
                 <Textarea
                   id="notes"
                   placeholder="Any additional notes"
                   rows={2}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _placeholder={{ color: useColorModeValue('gray.400', 'gray.400') }}
                   {...formik.getFieldProps('notes')}
                 />
               </FormControl>
-              
               {/* File URL Field (Optional) */}
               <FormControl isInvalid={formik.touched.fileUrl && formik.errors.fileUrl}>
-                <FormLabel htmlFor="fileUrl">File URL (Optional)</FormLabel>
+                <FormLabel htmlFor="fileUrl" color={useColorModeValue('gray.700', 'gray.100')}>File URL (Optional)</FormLabel>
                 <Input
                   id="fileUrl"
                   type="url"
                   placeholder="https://example.com/file.pdf"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  color={useColorModeValue('gray.800', 'gray.100')}
+                  borderColor={useColorModeValue('brand.200', 'gray.600')}
+                  _placeholder={{ color: useColorModeValue('gray.400', 'gray.400') }}
                   {...formik.getFieldProps('fileUrl')}
                 />
                 <FormErrorMessage>{formik.errors.fileUrl}</FormErrorMessage>
               </FormControl>
             </VStack>
-            
-            <ModalFooter px={0} mt={6} borderTop="1px" borderColor="gray.100" pt={4}>
+            <ModalFooter px={0} mt={6} borderTop="1px" borderColor={useColorModeValue('gray.100', 'gray.700')} pt={4} bg={useColorModeValue('white', 'gray.800')}>
               <Button 
                 mr={3} 
                 onClick={() => {
@@ -1839,17 +2172,17 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
                   onClose();
                 }} 
                 variant="outline" 
-                borderColor="brand.200"
-                color="gray.600"
-                _hover={{ bg: "gray.50" }}
+                borderColor={useColorModeValue('brand.200', 'gray.600')}
+                color={useColorModeValue('gray.600', 'gray.100')}
+                _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                bg="brand.100"
-                color="gray.700"
-                _hover={{ bg: "brand.200" }}
+                bg={useColorModeValue('brand.100', 'brand.200')}
+                color={useColorModeValue('gray.700', 'gray.900')}
+                _hover={{ bg: useColorModeValue('brand.200', 'brand.300') }}
                 isLoading={formik.isSubmitting}
                 leftIcon={isEditing ? <FiSave /> : <FiPlusCircle />}
                 boxShadow="sm"

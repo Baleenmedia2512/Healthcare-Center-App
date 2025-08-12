@@ -30,26 +30,30 @@ import { getDashboardStats } from '@/lib/api/dashboard';
 
 // Stat card component
 const StatCard = ({ title, stat, icon, helpText, accentColor }) => {
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const labelColor = useColorModeValue('gray.600', 'gray.300');
+  const statColor = useColorModeValue('gray.800', 'gray.100');
+  const helpTextColor = useColorModeValue('gray.500', 'gray.400');
   return (
     <Stat
       px={{ base: 2, md: 4 }}
       py="5"
       shadow="md"
       border="1px solid"
-      borderColor={useColorModeValue('gray.200', 'gray.500')}
+      borderColor={useColorModeValue('gray.200', 'gray.700')}
       rounded="lg"
-      bg="white"
+      bg={cardBg}
     >
       <Flex justifyContent="space-between">
         <Box pl={{ base: 2, md: 4 }}>
-          <StatLabel fontWeight="medium" isTruncated>
+          <StatLabel fontWeight="medium" isTruncated color={labelColor}>
             {title}
           </StatLabel>
-          <StatNumber fontSize="2xl" fontWeight="medium">
+          <StatNumber fontSize="2xl" fontWeight="medium" color={statColor}>
             {stat}
           </StatNumber>
           {helpText && (
-            <StatHelpText mb={0}>
+            <StatHelpText mb={0} color={helpTextColor}>
               {helpText}
             </StatHelpText>
           )}

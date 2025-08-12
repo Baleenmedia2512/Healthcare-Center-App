@@ -42,7 +42,7 @@ export default function ClinicAdminDashboard({ initialStats }) {
     <MainLayout>
       <Box p={4}>
         <Heading size="lg" mb={6}>Clinic Administration Dashboard</Heading>
-        <Text mb={6} color="gray.600">
+        <Text mb={6} color={useColorModeValue('gray.600', 'gray.300')}>
           Welcome {user?.name}, manage your clinic branches and branch administrators
         </Text>
         

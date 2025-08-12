@@ -15,6 +15,7 @@ import {
   VStack,
   HStack,
   useToast,
+  useColorModeValue,
   Grid,
   GridItem,
   Divider,
@@ -42,8 +43,10 @@ const PatientRegistration = () => {
   const router = useRouter();
   const { addPatient, isLoading, error } = useAppContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure();
   const [registeredPatientId, setRegisteredPatientId] = useState(null);
   const [formError, setFormError] = useState(null);
+  const [pendingPatientData, setPendingPatientData] = useState(null);
 
   // Enhanced form validation schema
   const validationSchema = Yup.object({
@@ -98,13 +101,6 @@ const PatientRegistration = () => {
           throw new Error('Chief complaints are required');
         }
         
-        // Log validation success for debugging
-        console.log('Form validation passed. Required fields:', {
-          mobileNumber: values.mobileNumber,
-          chiefComplaints: values.chiefComplaints
-        });
-        
-        // Ensure we explicitly set all required fields
         // Create a data object with explicit formatting
         const newPatientData = {
           name: values.name.trim(),
@@ -162,33 +158,14 @@ const PatientRegistration = () => {
           }
         };
 
-        console.log('Submitting patient data:', newPatientData);
-        console.log('Critical fields check:', {
-          mobileNumber: newPatientData.mobileNumber,
-          chiefComplaints: newPatientData.chiefComplaints,
-          mobileNumberType: typeof newPatientData.mobileNumber,
-          chiefComplaintsType: typeof newPatientData.chiefComplaints,
-          mobileNumberLength: newPatientData.mobileNumber.length,
-          chiefComplaintsLength: newPatientData.chiefComplaints.length
-        });
-
-        // Add the patient to the context
-        const result = await addPatient(newPatientData);
-        setRegisteredPatientId(result.id);
+        // Store the patient data and show confirmation modal
+        setPendingPatientData(newPatientData);
+        onConfirmOpen();
         
-        // Show success message
-        toast({
-          title: 'Patient registered successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        
-        onOpen(); // Open the success modal
       } catch (error) {
-        console.error("Error registering patient:", error);
+        console.error("Form validation error:", error);
         // Enhanced error handling
-        let errorMessage = 'Could not register patient';
+        let errorMessage = 'Form validation failed';
         let errorDetails = '';
         
         if (error.response) {
@@ -198,20 +175,11 @@ const PatientRegistration = () => {
           errorMessage = error.message;
         }
         
-        console.log('Registration error details:', {
-          message: errorMessage,
-          details: errorDetails,
-          response: error.response?.data
-        });
-        
-        // Set formik status to show additional error details
-        formik.setStatus(errorDetails);
-        
         // Set form error for display
         setFormError(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
         
         toast({
-          title: 'Registration failed',
+          title: 'Validation failed',
           description: `${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`,
           status: 'error',
           duration: 5000,
@@ -220,6 +188,70 @@ const PatientRegistration = () => {
       }
     },
   });
+
+  // Function to handle actual patient registration after confirmation
+  const handleConfirmRegistration = async () => {
+    try {
+      console.log('Submitting patient data:', pendingPatientData);
+      console.log('Critical fields check:', {
+        mobileNumber: pendingPatientData.mobileNumber,
+        chiefComplaints: pendingPatientData.chiefComplaints,
+        mobileNumberType: typeof pendingPatientData.mobileNumber,
+        chiefComplaintsType: typeof pendingPatientData.chiefComplaints,
+        mobileNumberLength: pendingPatientData.mobileNumber.length,
+        chiefComplaintsLength: pendingPatientData.chiefComplaints.length
+      });
+
+      // Add the patient to the context
+      const result = await addPatient(pendingPatientData);
+      setRegisteredPatientId(result.id);
+      
+      // Close confirmation modal and open success modal
+      onConfirmClose();
+      
+      // Show success message
+      toast({
+        title: 'Patient registered successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      onOpen(); // Open the success modal
+    } catch (error) {
+      console.error("Error registering patient:", error);
+      // Enhanced error handling
+      let errorMessage = 'Could not register patient';
+      let errorDetails = '';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+        errorDetails = error.response.data?.details || '';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.log('Registration error details:', {
+        message: errorMessage,
+        details: errorDetails,
+        response: error.response?.data
+      });
+      
+      // Close confirmation modal
+      onConfirmClose();
+      
+      // Set form error for display
+      setFormError(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
+      
+      toast({
+        title: 'Registration failed',
+        description: `${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   // Navigate to the patient's detail page or register another patient
   const handleNavigate = (path) => {
@@ -232,12 +264,12 @@ const PatientRegistration = () => {
       <Heading size="lg" mb="6">Patient Registration</Heading>
       
       <Card>
-        <CardHeader bg="brand.50" py="3">
-          <Heading size="md">Patient & Case Record</Heading>
+        <CardHeader bg={useColorModeValue('brand.50', 'gray.700')} py="3">
+          <Heading size="md" color={useColorModeValue('gray.700', 'gray.100')}>Patient & Case Record</Heading>
         </CardHeader>
         <CardBody>
-          <Alert status="info" mb={4}>
-            <AlertIcon />
+          <Alert status="info" mb={4} bg={useColorModeValue('blue.50', 'blue.900')} color={useColorModeValue('blue.800', 'blue.100')}>
+            <AlertIcon color={useColorModeValue('blue.500', 'blue.200')} />
             <Box>
               <Text fontWeight="bold">Form Instructions</Text>
               <Text fontSize="sm">
@@ -430,9 +462,9 @@ const PatientRegistration = () => {
                   type="submit" 
                   colorScheme="brand" 
                   leftIcon={<FiSave />} 
-                  isLoading={formik.isSubmitting || isLoading}
+                  isLoading={formik.isSubmitting}
                 >
-                  Register Patient
+                  Preview & Register Patient
                 </Button>
               </HStack>
             </VStack>
@@ -440,19 +472,102 @@ const PatientRegistration = () => {
         </CardBody>
       </Card>
 
+      {/* Confirmation Modal */}
+      <Modal isOpen={isConfirmOpen} onClose={onConfirmClose} size="lg">
+        <ModalOverlay />
+        <ModalContent bg={useColorModeValue('white', 'gray.800')} maxH="90vh">
+          <ModalHeader bg={useColorModeValue('blue.50', 'blue.900')} color={useColorModeValue('blue.700', 'blue.200')}>
+            Confirm Patient Registration
+          </ModalHeader>
+          <ModalCloseButton color={useColorModeValue('gray.700', 'gray.200')} />
+          <ModalBody py="6" overflowY="auto" maxH="calc(90vh - 120px)">
+            <Text mb={4} color={useColorModeValue('gray.600', 'gray.400')}>
+              Please review the patient details before confirming registration:
+            </Text>
+            
+            {pendingPatientData && (
+              <VStack spacing="4" align="stretch">
+                <Box p={4} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+                  <Heading size="sm" mb={3} color={useColorModeValue('gray.700', 'gray.200')}>
+                    Basic Information
+                  </Heading>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={3} fontSize="sm">
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Patient Name:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.name}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Guardian Name:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.guardianName || 'Not specified'}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Age:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.age} years</Text>
+                    </Box>
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Sex:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.sex}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Occupation:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.occupation || 'Not specified'}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')}>Mobile Number:</Text>
+                      <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.mobileNumber}</Text>
+                    </Box>
+                  </Grid>
+                </Box>
+                
+                <Box p={4} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+                  <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')} mb={2}>Address:</Text>
+                  <Text color={useColorModeValue('gray.800', 'gray.100')} fontSize="sm">{pendingPatientData.address}</Text>
+                </Box>
+                
+                <Box p={4} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+                  <Text fontWeight="bold" color={useColorModeValue('gray.600', 'gray.400')} mb={2}>Chief Complaints:</Text>
+                  <Text color={useColorModeValue('gray.800', 'gray.100')} fontSize="sm">{pendingPatientData.chiefComplaints}</Text>
+                </Box>
+              </VStack>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <Button 
+              variant="outline" 
+              mr={3} 
+              onClick={onConfirmClose}
+              color={useColorModeValue('gray.800', 'gray.100')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="brand" 
+              onClick={handleConfirmRegistration}
+              isLoading={isLoading}
+              leftIcon={<FiSave />}
+            >
+              Confirm & Register
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       {/* Success Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader bg="green.50">Registration Successful</ModalHeader>
-          <ModalCloseButton />
+        <ModalContent bg={useColorModeValue('white', 'gray.800')}>
+          <ModalHeader bg={useColorModeValue('green.50', 'green.900')} color={useColorModeValue('green.700', 'green.200')}>
+            Registration Successful
+          </ModalHeader>
+          <ModalCloseButton color={useColorModeValue('gray.700', 'gray.200')} />
           <ModalBody py="6">
             <VStack spacing="4">
-              <Icon as={FiCheckCircle} color="green.500" boxSize="12" />
-              <Text fontSize="lg" fontWeight="bold">
+              <Icon as={FiCheckCircle} color={useColorModeValue('green.500', 'green.300')} boxSize="12" />
+              <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.800', 'gray.100')}>
                 Patient has been registered successfully
               </Text>
-              <Text textAlign="center" color="gray.600">
+              <Text textAlign="center" color={useColorModeValue('gray.600', 'gray.400')}>
                 What would you like to do next?
               </Text>
             </VStack>
@@ -466,6 +581,7 @@ const PatientRegistration = () => {
                 formik.resetForm();
                 onClose();
               }}
+              color={useColorModeValue('gray.800', 'gray.100')}
             >
               Register Another Patient
             </Button>

@@ -16,6 +16,19 @@ import {
   Badge,
   Spinner,
   useToast,
+  Input,
+  VStack,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  IconButton,
+  HStack,
+  Link,
+  Select,
 } from '@chakra-ui/react';
 import { 
   FiUsers,
@@ -24,9 +37,363 @@ import {
   FiFileText,
   FiHome,
   FiTrendingUp,
+  FiPhone,
+  FiEye,
+  FiClock,
+  FiAlertCircle,
 } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
 import { getDashboardStats } from '@/lib/api/dashboard';
+import NextLink from 'next/link';
+
+// Appointments Summary Component
+const AppointmentsSummary = ({ appointments, selectedDate }) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedDateObj = new Date(selectedDate);
+  selectedDateObj.setHours(0, 0, 0, 0);
+  
+  const isToday = selectedDateObj.getTime() === today.getTime();
+  const isOverdue = selectedDateObj < today;
+  
+  const summary = appointments.reduce((acc, appointment) => {
+    const appointmentDate = new Date(appointment.followUpDate);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
+    if (appointmentDate < today) {
+      acc.overdue++;
+    } else if (appointmentDate.getTime() === today.getTime()) {
+      acc.today++;
+    } else {
+      acc.upcoming++;
+    }
+    return acc;
+  }, { overdue: 0, today: 0, upcoming: 0 });
+
+  return (
+    <Box mb={6}>
+      <HStack spacing={4} justify="space-between" align="center" mb={4}>
+        <Text fontSize="sm" color="gray.600">
+          {isToday ? 'Today\'s Schedule' : isOverdue ? 'Overdue Appointments' : 'Scheduled Appointments'} 
+          - {new Date(selectedDate).toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </Text>
+        <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
+          {appointments.length} Total
+        </Badge>
+      </HStack>
+      
+      <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+        {isToday && (
+          <Box p={3} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200">
+            <HStack>
+              <Icon as={FiCalendar} color="blue.500" />
+              <VStack align="start" spacing={0}>
+                <Text fontSize="lg" fontWeight="bold" color="blue.600">{summary.today}</Text>
+                <Text fontSize="xs" color="blue.500">Today</Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+        
+        {summary.overdue > 0 && (
+          <Box p={3} bg="red.50" borderRadius="md" border="1px" borderColor="red.200">
+            <HStack>
+              <Icon as={FiAlertCircle} color="red.500" />
+              <VStack align="start" spacing={0}>
+                <Text fontSize="lg" fontWeight="bold" color="red.600">{summary.overdue}</Text>
+                <Text fontSize="xs" color="red.500">Overdue</Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+        
+        {summary.upcoming > 0 && (
+          <Box p={3} bg="green.50" borderRadius="md" border="1px" borderColor="green.200">
+            <HStack>
+              <Icon as={FiClock} color="green.500" />
+              <VStack align="start" spacing={0}>
+                <Text fontSize="lg" fontWeight="bold" color="green.600">{summary.upcoming}</Text>
+                <Text fontSize="xs" color="green.500">Upcoming</Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+        
+        <Box p={3} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200">
+          <HStack>
+            <Icon as={FiUsers} color="gray.500" />
+            <VStack align="start" spacing={0}>
+              <Text fontSize="lg" fontWeight="bold" color="gray.600">
+                {new Set(appointments.map(a => a.patient?.id)).size}
+              </Text>
+              <Text fontSize="xs" color="gray.500">Patients</Text>
+            </VStack>
+          </HStack>
+        </Box>
+      </SimpleGrid>
+    </Box>
+  );
+};
+
+// Appointments Table Component
+const AppointmentsTable = ({ appointments, selectedDate }) => {
+  const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const getAppointmentStatus = (followUpDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const appointmentDate = new Date(followUpDate);
+    appointmentDate.setHours(0, 0, 0, 0);
+
+    if (appointmentDate < today) {
+      return { status: 'overdue', color: 'red' };
+    } else if (appointmentDate.getTime() === today.getTime()) {
+      return { status: 'today', color: 'blue' };
+    } else {
+      return { status: 'upcoming', color: 'green' };
+    }
+  };
+  
+  // Filter and sort appointments
+  const filteredAndSortedAppointments = React.useMemo(() => {
+    let filtered = appointments;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(appointment =>
+        appointment.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.details?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.patient?.mobileNumber?.includes(searchTerm)
+      );
+    }
+
+    // Apply status filter
+    if (filter !== 'all') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      filtered = filtered.filter(appointment => {
+        const appointmentDate = new Date(appointment.followUpDate);
+        appointmentDate.setHours(0, 0, 0, 0);
+        
+        switch (filter) {
+          case 'today':
+            return appointmentDate.getTime() === today.getTime();
+          case 'overdue':
+            return appointmentDate < today;
+          case 'upcoming':
+            return appointmentDate > today;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return (a.patient?.name || '').localeCompare(b.patient?.name || '');
+        case 'date':
+          return new Date(a.followUpDate) - new Date(b.followUpDate);
+        case 'status':
+          const statusA = getAppointmentStatus(a.followUpDate).status;
+          const statusB = getAppointmentStatus(b.followUpDate).status;
+          return statusA.localeCompare(statusB);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [appointments, filter, sortBy, searchTerm]);
+  
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <Box>
+      {/* Filter and Sort Controls */}
+      <HStack spacing={4} mb={4} wrap="wrap">
+        <Box>
+          <Text fontSize="sm" mb={1} color="gray.600">Search</Text>
+          <Input
+            placeholder="Search patients, details, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="sm"
+            maxW="250px"
+          />
+        </Box>
+        
+        <Box>
+          <Text fontSize="sm" mb={1} color="gray.600">Filter by Status</Text>
+          <Select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            size="sm"
+            maxW="150px"
+          >
+            <option value="all">All</option>
+            <option value="today">Today</option>
+            <option value="overdue">Overdue</option>
+            <option value="upcoming">Upcoming</option>
+          </Select>
+        </Box>
+        
+        <Box>
+          <Text fontSize="sm" mb={1} color="gray.600">Sort by</Text>
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            size="sm"
+            maxW="150px"
+          >
+            <option value="name">Patient Name</option>
+            <option value="date">Appointment Date</option>
+            <option value="status">Status</option>
+          </Select>
+        </Box>
+        
+        <Box>
+          <Text fontSize="sm" mb={1} color="gray.600">Results</Text>
+          <Badge colorScheme="gray" px={3} py={1}>
+            {filteredAndSortedAppointments.length} of {appointments.length}
+          </Badge>
+        </Box>
+      </HStack>
+
+      <TableContainer>
+      <Table variant="simple" size="md">
+        <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
+          <Tr>
+            <Th>Patient</Th>
+            <Th>Contact</Th>
+            <Th>Investigation Details</Th>
+            <Th>Original Date</Th>
+            <Th>Appointment Status</Th>
+            <Th textAlign="center">Actions</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {filteredAndSortedAppointments.map((appointment) => {
+            const statusInfo = getAppointmentStatus(appointment.followUpDate);
+            return (
+              <Tr key={appointment.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.600') }}>
+                <Td>
+                  <VStack align="start" spacing={1}>
+                    <Text fontWeight="semibold" color={useColorModeValue('gray.800', 'gray.100')}>
+                      {appointment.patient?.name}
+                    </Text>
+                    <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                      ID: {appointment.patient?.id?.slice(-8)}
+                    </Text>
+                  </VStack>
+                </Td>
+                <Td>
+                  <HStack>
+                    <Icon as={FiPhone} color="gray.500" />
+                    <Text fontSize="sm">{appointment.patient?.mobileNumber}</Text>
+                  </HStack>
+                </Td>
+                <Td>
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" fontWeight="medium" noOfLines={2}>
+                      {appointment.details}
+                    </Text>
+                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
+                      {appointment.type} Investigation
+                    </Text>
+                    {appointment.notes && (
+                      <Text fontSize="xs" color="blue.500" noOfLines={1}>
+                        Note: {appointment.notes}
+                      </Text>
+                    )}
+                  </VStack>
+                </Td>
+                <Td>
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm">{formatDate(appointment.date)}</Text>
+                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
+                      by {appointment.doctor || 'Unknown'}
+                    </Text>
+                  </VStack>
+                </Td>
+                <Td>
+                  <VStack align="start" spacing={1}>
+                    <Badge 
+                      colorScheme={statusInfo.color} 
+                      variant="subtle"
+                      textTransform="capitalize"
+                    >
+                      <HStack spacing={1}>
+                        <Icon 
+                          as={statusInfo.status === 'overdue' ? FiAlertCircle : FiClock} 
+                          size="12px" 
+                        />
+                        <Text>{statusInfo.status}</Text>
+                      </HStack>
+                    </Badge>
+                    <Text fontSize="xs" color={useColorModeValue('gray.600', 'gray.400')}>
+                      {formatDate(appointment.followUpDate)}
+                    </Text>
+                  </VStack>
+                </Td>
+                <Td textAlign="center">
+                  <HStack spacing={2} justifyContent="center">
+                    <Link as={NextLink} href={`/patient/${appointment.patient?.id}`}>
+                      <IconButton
+                        aria-label="View Patient"
+                        icon={<FiEye />}
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        title="View Patient Details"
+                      />
+                    </Link>
+                    {appointment.patient?.mobileNumber && (
+                      <IconButton
+                        aria-label="Call Patient"
+                        icon={<FiPhone />}
+                        size="sm"
+                        colorScheme="green"
+                        variant="outline"
+                        title={`Call ${appointment.patient.mobileNumber}`}
+                        as="a"
+                        href={`tel:${appointment.patient.mobileNumber}`}
+                      />
+                    )}
+                  </HStack>
+                </Td>
+              </Tr>
+            );
+          })}
+        </Tbody>
+      </Table>
+    </TableContainer>
+    </Box>
+  );
+};
 
 // Stat card component
 const StatCard = ({ title, stat, icon, helpText, accentColor }) => {
@@ -213,12 +580,47 @@ const BranchAdminDashboard = ({ stats, branchName }) => {
 
 // Doctor Dashboard Component
 const DoctorDashboard = ({ stats, branchName }) => {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [appointments, setAppointments] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const toast = useToast();
+
+  // Fetch appointments for selected date
+  const fetchAppointments = async (date) => {
+    try {
+      setLoadingAppointments(true);
+      const response = await fetch(`/api/appointments?date=${date}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(data);
+      } else {
+        throw new Error('Failed to fetch appointments');
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      toast({
+        title: 'Error loading appointments',
+        description: 'Could not load appointments for selected date',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setAppointments([]);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments(selectedDate);
+  }, [selectedDate]);
+
   return (
     <Box p={6}>
       <Heading size="lg" mb={2}>Doctor Dashboard</Heading>
       {branchName && <Badge colorScheme="purple" mb={6}>{branchName}</Badge>}
       
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
         <StatCard
           title="My Patients"
           stat={stats.myPatientCount || 0}
@@ -226,17 +628,17 @@ const DoctorDashboard = ({ stats, branchName }) => {
           accentColor="green.500"
         />
         <StatCard
-          title="Recent Cases"
-          stat={stats.recentCases || 0}
+          title="Today's Appointments"
+          stat={stats.todaysAppointments || 0}
           icon={FiCalendar}
-          helpText="Last 30 days"
+          helpText="Scheduled today"
           accentColor="blue.500"
         />
         <StatCard
-          title="Pending Reports"
+          title="Pending Follow-ups"
           stat={stats.pendingReports || 0}
           icon={FiFileText}
-          accentColor="red.500"
+          accentColor="orange.500"
         />
         <StatCard
           title="Total Investigations"
@@ -245,6 +647,54 @@ const DoctorDashboard = ({ stats, branchName }) => {
           accentColor="purple.500"
         />
       </SimpleGrid>
+
+      {/* Appointments Section */}
+      <Card mt={8}>
+        <CardBody>
+          <Flex justify="space-between" align="center" mb={6}>
+            <Heading size="md">Appointments Schedule</Heading>
+            <Flex align="center" gap={2}>
+              <Text fontSize="sm" color="gray.600">Select Date:</Text>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                size="sm"
+                width="auto"
+                bg="white"
+              />
+            </Flex>
+          </Flex>
+          
+          {loadingAppointments ? (
+            <Flex justifyContent="center" py={8}>
+              <Spinner size="lg" color="blue.500" />
+              <Text ml={3}>Loading appointments...</Text>
+            </Flex>
+          ) : appointments.length > 0 ? (
+            <Box>
+              <AppointmentsSummary 
+                appointments={appointments} 
+                selectedDate={selectedDate}
+              />
+              <AppointmentsTable 
+                appointments={appointments} 
+                selectedDate={selectedDate}
+              />
+            </Box>
+          ) : (
+            <Box textAlign="center" py={8}>
+              <Icon as={FiCalendar} w={12} h={12} color="gray.300" mb={4} />
+              <Text color="gray.500" fontSize="lg">
+                No appointments scheduled for {new Date(selectedDate).toLocaleDateString()}
+              </Text>
+              <Text color="gray.400" fontSize="sm" mt={2}>
+                Appointments will appear here when scheduled through investigation reports
+              </Text>
+            </Box>
+          )}
+        </CardBody>
+      </Card>
     </Box>
   );
 };

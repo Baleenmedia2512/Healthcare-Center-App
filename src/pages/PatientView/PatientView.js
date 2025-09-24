@@ -39,11 +39,13 @@ import {
   FormControl,
   FormLabel,
   FormErrorMessage,
+  FormHelperText,
   Input,
   Select,
   Textarea,
   IconButton,
   Switch,
+  Checkbox,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
@@ -1805,6 +1807,7 @@ const InvestigationsTab = ({ patient, canEdit, doctors, currentUser }) => {
                     <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="150px">Doctor</Th>
                     <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="200px">Details</Th>
                     <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="200px">Additional Notes</Th>
+                    <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="140px" textAlign="center">Follow-up</Th>
                     <Th borderColor={useColorModeValue('brand.200', 'gray.700')} color={useColorModeValue('gray.600', 'gray.200')} minW="120px" textAlign="center">Actions</Th>
                   </Tr>
                 </Thead>
@@ -1823,6 +1826,22 @@ const InvestigationsTab = ({ patient, canEdit, doctors, currentUser }) => {
                           </Text>
                         ) : (
                           <Text color={useColorModeValue('gray.400', 'gray.500')} as="i">No notes</Text>
+                        )}
+                      </Td>
+                      <Td borderColor={useColorModeValue('gray.100', 'gray.700')} textAlign="center">
+                        {investigation.followUpNeeded && investigation.followUpDate ? (
+                          <VStack spacing={1}>
+                            <Badge colorScheme="blue" variant="subtle">
+                              {new Date(investigation.followUpDate) >= new Date().setHours(0,0,0,0) ? 'Scheduled' : 'Overdue'}
+                            </Badge>
+                            <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                              {formatDate(investigation.followUpDate)}
+                            </Text>
+                          </VStack>
+                        ) : (
+                          <Text color={useColorModeValue('gray.400', 'gray.500')} fontSize="sm" as="i">
+                            None
+                          </Text>
                         )}
                       </Td>
                       <Td borderColor={useColorModeValue('gray.100', 'gray.700')} textAlign="center">
@@ -1922,7 +1941,14 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
     date: Yup.date().required('Date is required').max(new Date(), 'Date cannot be in the future'),
     fileUrl: Yup.string().url('Must be a valid URL').nullable(),
     doctor: Yup.string(),
-    notes: Yup.string()
+    notes: Yup.string(),
+    followUpNeeded: Yup.boolean(),
+    followUpDate: Yup.date().when('followUpNeeded', {
+      is: true,
+      then: (schema) => schema.required('Follow-up date is required when scheduling an appointment')
+        .min(new Date(), 'Follow-up date must be in the future'),
+      otherwise: (schema) => schema.nullable()
+    })
   });
   
   // Initialize formik for form handling with simplified fields
@@ -1932,7 +1958,9 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
       date: investigation?.date ? new Date(investigation.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       fileUrl: investigation?.fileUrl || '',
       doctor: investigation?.doctor || '',
-      notes: investigation?.notes || ''
+      notes: investigation?.notes || '',
+      followUpNeeded: investigation?.followUpNeeded || false,
+      followUpDate: investigation?.followUpDate ? new Date(investigation.followUpDate).toISOString().split('T')[0] : ''
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -1943,7 +1971,8 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
         const formattedValues = {
           ...values,
           type: "General", // Set a default type since we removed the field
-          date: new Date(values.date).toISOString()
+          date: new Date(values.date).toISOString(),
+          followUpDate: values.followUpNeeded && values.followUpDate ? new Date(values.followUpDate).toISOString() : null
         };
         
         if (isEditing) {
@@ -2011,7 +2040,9 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
         date: investigation.date ? new Date(investigation.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         fileUrl: investigation.fileUrl || '',
         doctor: investigation.doctor || '',
-        notes: investigation.notes || ''
+        notes: investigation.notes || '',
+        followUpNeeded: investigation.followUpNeeded || false,
+        followUpDate: investigation.followUpDate ? new Date(investigation.followUpDate).toISOString().split('T')[0] : ''
       });
     } else {
       // Reset to default values for new investigation
@@ -2020,7 +2051,9 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
         date: new Date().toISOString().split('T')[0],
         fileUrl: '',
         doctor: '',
-        notes: ''
+        notes: '',
+        followUpNeeded: false,
+        followUpDate: ''
       });
     }
   }, [investigation]);
@@ -2163,6 +2196,54 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
                 />
                 <FormErrorMessage>{formik.errors.fileUrl}</FormErrorMessage>
               </FormControl>
+              
+              {/* Follow-up Appointment Section */}
+              <Box borderTop="1px" borderColor={useColorModeValue('gray.200', 'gray.600')} pt={4} mt={4}>
+                <Text fontSize="md" fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.100')} mb={3}>
+                  Follow-up Appointment
+                </Text>
+                
+                {/* Follow-up Needed Checkbox */}
+                <FormControl>
+                  <Checkbox
+                    id="followUpNeeded"
+                    isChecked={formik.values.followUpNeeded}
+                    onChange={(e) => {
+                      formik.setFieldValue('followUpNeeded', e.target.checked);
+                      if (!e.target.checked) {
+                        formik.setFieldValue('followUpDate', '');
+                      }
+                    }}
+                    colorScheme="brand"
+                  >
+                    <Text color={useColorModeValue('gray.700', 'gray.100')}>
+                      Schedule next appointment
+                    </Text>
+                  </Checkbox>
+                </FormControl>
+                
+                {/* Follow-up Date Field */}
+                {formik.values.followUpNeeded && (
+                  <FormControl mt={3} isInvalid={formik.touched.followUpDate && formik.errors.followUpDate}>
+                    <FormLabel htmlFor="followUpDate" color={useColorModeValue('gray.700', 'gray.100')}>
+                      Next Appointment Date
+                    </FormLabel>
+                    <Input
+                      id="followUpDate"
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]} // Prevent selecting past dates
+                      bg={useColorModeValue('white', 'gray.700')}
+                      color={useColorModeValue('gray.800', 'gray.100')}
+                      borderColor={useColorModeValue('brand.200', 'gray.600')}
+                      {...formik.getFieldProps('followUpDate')}
+                    />
+                    <FormErrorMessage>{formik.errors.followUpDate}</FormErrorMessage>
+                    <FormHelperText color={useColorModeValue('gray.500', 'gray.400')}>
+                      Select the date for the next appointment
+                    </FormHelperText>
+                  </FormControl>
+                )}
+              </Box>
             </VStack>
             <ModalFooter px={0} mt={6} borderTop="1px" borderColor={useColorModeValue('gray.100', 'gray.700')} pt={4} bg={useColorModeValue('white', 'gray.800')}>
               <Button 

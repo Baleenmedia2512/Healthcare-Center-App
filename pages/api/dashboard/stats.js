@@ -32,7 +32,8 @@ export default async function handler(req, res) {
       recentCases: 0,
       pendingReports: 0,
       clinicCount: 0,
-      branchCount: 0
+      branchCount: 0,
+      todaysAppointments: 0
     };
     
     // Common date filter for "recent" items (last 30 days)
@@ -186,6 +187,26 @@ export default async function handler(req, res) {
             followUpNeeded: true,
             followUpDate: {
               gt: new Date()
+            }
+          }
+        });
+
+        // Today's appointments count
+        const today = new Date();
+        const startOfToday = new Date(today);
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(today);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        stats.todaysAppointments = await prisma.investigation.count({
+          where: {
+            patient: {
+              userId: session.user.id
+            },
+            followUpNeeded: true,
+            followUpDate: {
+              gte: startOfToday,
+              lte: endOfToday
             }
           }
         });

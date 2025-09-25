@@ -371,7 +371,7 @@ const AppointmentsTable = ({ appointments, selectedDate }) => {
                       {appointment.patient?.name}
                     </Text>
                     <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
-                      ID: {appointment.patient?.id?.slice(-8)}
+                      ID: #{appointment.patient?.id}
                     </Text>
                   </VStack>
                 </Td>
@@ -730,7 +730,7 @@ const DoctorDashboard = ({ stats, branchName, selectedDate, setSelectedDate, app
           title="Patients"
           stat={dateSpecificStats.uniquePatients}
           icon={FiUsers}
-          helpText={dateSpecificStats.isToday ? "Today" : "Selected date"}
+          helpText={dateSpecificStats.isToday ? "Today" : `On ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
           accentColor="green.500"
         />
         <StatCard

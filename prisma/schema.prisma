@@ -29,17 +29,16 @@ model Clinic {
 }
 
 model Branch {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
   address      String
   contactEmail String
   contactPhone String
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   clinicId     String
-  clinic       Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  patients     Patient[]
+  clinic       Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
   users        User[]
 
   @@index([clinicId], map: "branches_clinicId_fkey")
@@ -47,19 +46,18 @@ model Branch {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
+  id             String   @id @default(cuid())
+  email          String   @unique
   hashedPassword String
   fullName       String?
-  role           String    @default("doctor")
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  role           String   @default("doctor")
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   clinicId       String?
   branchId       String?
-  patients       Patient[]
-  branch         Branch?   @relation(fields: [branchId], references: [id])
-  clinic         Clinic?   @relation(fields: [clinicId], references: [id])
+  branch         Branch?  @relation(fields: [branchId], references: [id])
+  clinic         Clinic?  @relation(fields: [clinicId], references: [id])
 
   @@index([branchId], map: "users_branchId_fkey")
   @@index([clinicId], map: "users_clinicId_fkey")
@@ -67,26 +65,24 @@ model User {
 }
 
 model Patient {
-  id               String          @id @default(cuid())
+  id               Int             @id @default(autoincrement())
   name             String
   guardianName     String?
-  address          String
+  address          String          @db.Text
   age              Int
   sex              String
   occupation       String?
   mobileNumber     String
-  chiefComplaints  String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  chiefComplaints  String          @db.Text
   medicalHistory   String?         @db.Text
   physicalGenerals String?         @db.Text
   menstrualHistory String?         @db.Text
   foodAndHabit     String?         @db.Text
   userId           String
   branchId         String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
   investigations   Investigation[]
-  branch           Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([branchId], map: "patients_branchId_fkey")
   @@index([userId], map: "patients_userId_fkey")
@@ -96,19 +92,19 @@ model Patient {
 model Investigation {
   id             String    @id @default(cuid())
   type           String
-  details        String
+  details        String    @db.Text
   date           DateTime
   fileUrl        String?
   doctor         String?
-  results        String?
+  results        String?   @db.Text
   normalRange    String?
   followUpNeeded Boolean?  @default(false)
   followUpDate   DateTime?
-  notes          String?
+  notes          String?   @db.Text
+  patientId      Int
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  patientId      String
-  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime  @default(now()) @updatedAt
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade, map: "investigations_ibfk_1")
 
   @@index([patientId], map: "investigations_patientId_fkey")
   @@map("investigations")

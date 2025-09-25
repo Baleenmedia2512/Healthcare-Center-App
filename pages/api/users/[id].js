@@ -36,9 +36,6 @@ export default async function handler(req, res) {
             },
             branch: {
               select: { id: true, name: true }
-            },
-            _count: {
-              select: { patients: true }
             }
           }
         });
@@ -72,8 +69,9 @@ export default async function handler(req, res) {
             break;
         }
 
-        // Remove password hash from response
+        // Remove password hash from response and add default patientCount
         const { hashedPassword, ...safeUser } = user;
+        safeUser.patientCount = 0; // Default value since User model doesn't have patient relation
         return res.status(200).json(safeUser);
 
       case 'PUT':

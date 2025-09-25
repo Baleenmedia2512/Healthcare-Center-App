@@ -84,14 +84,17 @@ const PatientView = ({ patientId }) => {
   // Use patientId prop or id from router
   const currentPatientId = patientId || id;
   
+  // Convert to number for comparison since router params are strings but patient IDs are numbers
+  const numericPatientId = parseInt(currentPatientId);
+  
   // Find the patient with the given ID
-  const patient = patients.find(p => p.id === currentPatientId);
+  const patient = patients.find(p => p.id === numericPatientId);
   
   // Check if current user can edit patient data - admins and doctors can edit, plus the user who created the patient
   const canEdit = currentUser && (['admin', 'doctor'].includes(currentUser.role) || (patient && patient.userId === currentUser.id));
   
   // Check if patient exists or if we're still waiting for data
-  if (!currentPatientId || !patient) {
+  if (!currentPatientId || isNaN(numericPatientId) || !patient) {
     return (
       <Box textAlign="center" py="10">
         <Heading size="lg" mb="4">Patient Not Found</Heading>
@@ -222,7 +225,7 @@ const PatientView = ({ patientId }) => {
                 <Heading size="md" color={useColorModeValue('brand.600', 'brand.200')}>{patient.name}</Heading>
                 <HStack mt="2">
                   <Text color="gray.600" fontSize="sm">ID: </Text>
-                  <Text fontWeight="semibold" fontFamily="mono" fontSize="sm" bg={useColorModeValue('brand.50', 'gray.700')} color={useColorModeValue('gray.700', 'gray.100')} px={2} py={1} borderRadius="md">{patient.id.substring(0, 8)}</Text>
+                  <Text fontWeight="semibold" fontFamily="mono" fontSize="sm" bg={useColorModeValue('brand.50', 'gray.700')} color={useColorModeValue('gray.700', 'gray.100')} px={2} py={1} borderRadius="md">#{patient.id}</Text>
                 </HStack>
                 <HStack mt="2" spacing={3}>
                   <Badge bg={useColorModeValue('brand.300', 'brand.700')} color="white" py={1} px={2} borderRadius="md">{patient.sex}</Badge>
@@ -1951,13 +1954,37 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
     })
   });
   
+  // Helper function to get the current user's doctor name from the doctors array
+  const getCurrentDoctorName = () => {
+    if (investigation?.doctor) {
+      // If editing, keep the existing doctor
+      return investigation.doctor;
+    }
+    
+    if (currentUser && doctors && doctors.length > 0) {
+      // Try to find current user in doctors array
+      const currentUserAsDoctor = doctors.find(doctor => 
+        doctor.email === currentUser.email || 
+        doctor.id === currentUser.id ||
+        doctor.name === currentUser.fullName ||
+        doctor.name === currentUser.name
+      );
+      
+      if (currentUserAsDoctor) {
+        return currentUserAsDoctor.name;
+      }
+    }
+    
+    return '';
+  };
+  
   // Initialize formik for form handling with simplified fields
   const formik = useFormik({
     initialValues: {
       details: investigation?.details || '',
       date: investigation?.date ? new Date(investigation.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       fileUrl: investigation?.fileUrl || '',
-      doctor: investigation?.doctor || '',
+      doctor: getCurrentDoctorName(),
       notes: investigation?.notes || '',
       followUpNeeded: investigation?.followUpNeeded || false,
       followUpDate: investigation?.followUpDate ? new Date(investigation.followUpDate).toISOString().split('T')[0] : ''
@@ -2050,13 +2077,23 @@ const InvestigationFormModal = ({ isOpen, onClose, patientId, investigation, onS
         details: '',
         date: new Date().toISOString().split('T')[0],
         fileUrl: '',
-        doctor: '',
+        doctor: getCurrentDoctorName(),
         notes: '',
         followUpNeeded: false,
         followUpDate: ''
       });
     }
   }, [investigation]);
+
+  // Update doctor field when doctors are loaded and no investigation is being edited
+  useEffect(() => {
+    if (!investigation && doctors && doctors.length > 0 && !formik.values.doctor) {
+      const currentDoctorName = getCurrentDoctorName();
+      if (currentDoctorName) {
+        formik.setFieldValue('doctor', currentDoctorName);
+      }
+    }
+  }, [doctors, investigation]);
   
   return (
     <Modal 

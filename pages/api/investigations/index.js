@@ -19,10 +19,11 @@ export default async function handler(req, res) {
         let investigations;
         if (patientId) {
           console.log('Fetching investigations for patient ID:', patientId);
+          const numericPatientId = parseInt(patientId);
           // Get investigations for specific patient
           investigations = await prisma.investigation.findMany({
             where: {
-              patientId: patientId,
+              patientId: numericPatientId,
               // Make this optional during development to simplify testing
               ...(process.env.NODE_ENV === 'production' ? {
                 patient: {
@@ -110,18 +111,19 @@ export default async function handler(req, res) {
 
         try {
           // Verify patient belongs to user - make this optional in development
+          const numericNewPatientId = parseInt(newPatientId);
           let patient;
           if (process.env.NODE_ENV === 'production') {
             patient = await prisma.patient.findFirst({
               where: {
-                id: newPatientId,
+                id: numericNewPatientId,
                 userId: session.user.id
               }
             });
           } else {
             patient = await prisma.patient.findUnique({
               where: {
-                id: newPatientId
+                id: numericNewPatientId
               }
             });
           }
@@ -158,7 +160,7 @@ export default async function handler(req, res) {
               followUpNeeded: followUpNeeded || false,
               followUpDate: parsedFollowUpDate,
               notes: notes || null,
-              patientId: newPatientId
+              patientId: numericNewPatientId
             },
             include: {
               patient: {

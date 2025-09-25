@@ -224,27 +224,7 @@ export default async function handler(req, res) {
         const queryParams = applyTenantScope(
           {
             include: {
-              investigations: true,
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  fullName: true,
-                  role: true
-                }
-              },
-              branch: {
-                select: {
-                  id: true,
-                  name: true,
-                  clinic: {
-                    select: {
-                      id: true,
-                      name: true
-                    }
-                  }
-                }
-              }
+              investigations: true
             },
             orderBy: {
               createdAt: 'desc'
@@ -357,12 +337,12 @@ export default async function handler(req, res) {
             createdAt: patient.createdAt,
             updatedAt: patient.updatedAt,
             userId: patient.userId,
+            branchId: patient.branchId,
             medicalHistory,
             physicalGenerals,
             menstrualHistory,
             foodAndHabit,
-            investigations: patient.investigations || [],
-            user: patient.user
+            investigations: patient.investigations || []
           };
         });
 

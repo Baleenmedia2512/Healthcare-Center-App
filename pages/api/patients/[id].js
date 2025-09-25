@@ -13,7 +13,10 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
 
-  if (!id || typeof id !== 'string') {
+  // Convert string ID to integer for numerical patient IDs
+  const patientId = parseInt(id);
+  
+  if (!id || isNaN(patientId)) {
     return res.status(400).json({ error: 'Invalid patient ID' });
   }
 
@@ -22,7 +25,7 @@ export default async function handler(req, res) {
       case 'GET':
         const patient = await prisma.patient.findFirst({
           where: {
-            id: id,
+            id: patientId,
             userId: session.user.id
           },
           include: {
@@ -122,7 +125,7 @@ export default async function handler(req, res) {
         // Check if patient belongs to user
         const existingPatient = await prisma.patient.findFirst({
           where: {
-            id: id,
+            id: patientId,
             userId: session.user.id
           }
         });
@@ -164,7 +167,7 @@ export default async function handler(req, res) {
           : existingPatient.foodAndHabit;
 
         const updatedPatient = await prisma.patient.update({
-          where: { id: id },
+          where: { id: patientId },
           data: {
             name: name || existingPatient.name,
             guardianName: guardianName !== undefined ? guardianName : existingPatient.guardianName,
@@ -208,7 +211,7 @@ export default async function handler(req, res) {
         // Check if patient belongs to user
         const patientToDelete = await prisma.patient.findFirst({
           where: {
-            id: id,
+            id: patientId,
             userId: session.user.id
           }
         });
@@ -218,7 +221,7 @@ export default async function handler(req, res) {
         }
 
         await prisma.patient.delete({
-          where: { id: id }
+          where: { id: patientId }
         });
 
         return res.status(200).json({ message: 'Patient deleted successfully' });

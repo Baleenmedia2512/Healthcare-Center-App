@@ -85,11 +85,6 @@ export default async function handler(req, res) {
               id: true,
               name: true
             }
-          },
-          _count: {
-            select: {
-              patients: true
-            }
           }
         };
         
@@ -112,7 +107,7 @@ export default async function handler(req, res) {
           branchId: user.branchId,
           clinicName: user.clinic?.name,
           branchName: user.branch?.name,
-          patientCount: user._count.patients
+          patientCount: 0 // TODO: Calculate patient count separately if needed
         }));
         
         return res.status(200).json(transformedUsers);

@@ -35,6 +35,8 @@ import {
   useToast,
   Spinner,
   Center,
+  Tooltip,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { 
   FiSearch, 
@@ -46,6 +48,9 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiUser,
+  FiPhone,
+  FiMapPin,
+  FiCalendar,
 } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { usePatients } from '../../hooks';
@@ -87,7 +92,11 @@ const PatientList = () => {
     return (
       patient.name.toLowerCase().includes(searchValue) ||
       patient.mobileNumber.includes(searchValue) ||
-      (patient.age && patient.age.toString().includes(searchValue))
+      (patient.age && patient.age.toString().includes(searchValue)) ||
+      (patient.guardianName && patient.guardianName.toLowerCase().includes(searchValue)) ||
+      (patient.address && patient.address.toLowerCase().includes(searchValue)) ||
+      (patient.occupation && patient.occupation.toLowerCase().includes(searchValue)) ||
+      (patient.chiefComplaints && patient.chiefComplaints.toLowerCase().includes(searchValue))
     );
   });
 
@@ -143,6 +152,55 @@ const PatientList = () => {
       setPatientToDelete(null);
       onClose();
     }
+  };
+
+  // Handle call patient
+  const handleCallPatient = (mobileNumber, patientName) => {
+    if (!mobileNumber) {
+      toast({
+        title: 'No phone number',
+        description: 'This patient has no mobile number on file.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    // Create tel: link to initiate call
+    const telLink = `tel:${mobileNumber}`;
+    window.location.href = telLink;
+    
+    toast({
+      title: 'Calling patient',
+      description: `Initiating call to ${patientName}`,
+      status: 'info',
+      duration: 2000,
+      isClosable: true,
+    });
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Get last investigation date
+  const getLastVisitDate = (patient) => {
+    if (!patient.investigations || patient.investigations.length === 0) {
+      return 'No visits';
+    }
+    
+    const lastInvestigation = patient.investigations.reduce((latest, current) => {
+      return new Date(current.date) > new Date(latest.date) ? current : latest;
+    });
+    
+    return formatDate(lastInvestigation.date);
   };
 
   // Display loading state
@@ -201,7 +259,7 @@ const PatientList = () => {
                 <FiSearch color="gray.300" />
               </InputLeftElement>
               <Input
-                placeholder="Search patients by name, mobile, or age..."
+                placeholder="Search patients by name, mobile, age, guardian, address, occupation, or complaints..."
                 value={searchTerm}
                 onChange={handleSearchChange}
               />
@@ -210,58 +268,140 @@ const PatientList = () => {
 
           {/* Patients table */}
           <TableContainer>
-            <Table variant="simple">
-              <Thead>
+            <Table variant="simple" size="sm">
+              <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Age</Th>
-                  <Th>Sex</Th>
+                  <Th>Name & Guardian</Th>
+                  <Th>Age/Sex</Th>
                   <Th>Mobile</Th>
+                  <Th>Address</Th>
+                  <Th>Occupation</Th>
+                  <Th>Chief Complaints</Th>
+                  <Th>Last Visit</Th>
                   <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {currentPatients.length > 0 ? (
                   currentPatients.map((patient) => (
-                    <Tr key={patient.id}>
-                      <Td>{patient.name}</Td>
-                      <Td>{patient.age}</Td>
-                      <Td>{patient.sex}</Td>
-                      <Td>{patient.mobileNumber}</Td>
+                    <Tr key={patient.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
                       <Td>
-                        <Flex>
-                          <IconButton
-                            icon={<FiEye />}
-                            variant="outline"
-                            mr={2}
-                            onClick={() => viewPatient(patient.id)}
-                            aria-label="View patient"
+                        <Box>
+                          <Text fontWeight="medium" color={useColorModeValue('gray.900', 'gray.100')}>
+                            {patient.name}
+                          </Text>
+                          {patient.guardianName && (
+                            <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                              Guardian: {patient.guardianName}
+                            </Text>
+                          )}
+                        </Box>
+                      </Td>
+                      <Td>
+                        <Box>
+                          <Text fontWeight="medium">{patient.age} yrs</Text>
+                          <Badge 
+                            colorScheme={patient.sex === 'Male' ? 'blue' : patient.sex === 'Female' ? 'pink' : 'gray'}
                             size="sm"
-                          />
-                          <IconButton
-                            icon={<FiEdit2 />}
-                            variant="outline"
-                            mr={2}
-                            onClick={() => editPatient(patient.id)}
-                            aria-label="Edit patient"
-                            size="sm"
-                          />
-                          <IconButton
-                            icon={<FiTrash2 />}
-                            variant="outline"
-                            colorScheme="red"
-                            onClick={() => confirmDelete(patient)}
-                            aria-label="Delete patient"
-                            size="sm"
-                          />
-                        </Flex>
+                          >
+                            {patient.sex}
+                          </Badge>
+                        </Box>
+                      </Td>
+                      <Td>
+                        <HStack spacing={2}>
+                          <Text>{patient.mobileNumber}</Text>
+                          <Tooltip label={`Call ${patient.name}`} placement="top">
+                            <IconButton
+                              icon={<FiPhone />}
+                              size="xs"
+                              colorScheme="green"
+                              variant="outline"
+                              onClick={() => handleCallPatient(patient.mobileNumber, patient.name)}
+                              aria-label="Call patient"
+                            />
+                          </Tooltip>
+                        </HStack>
+                      </Td>
+                      <Td maxW="200px">
+                        <Tooltip label={patient.address} placement="top">
+                          <Text 
+                            fontSize="sm" 
+                            noOfLines={2}
+                            color={useColorModeValue('gray.600', 'gray.400')}
+                          >
+                            <FiMapPin style={{ display: 'inline', marginRight: '4px' }} />
+                            {patient.address}
+                          </Text>
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <Text 
+                          fontSize="sm"
+                          color={useColorModeValue('gray.700', 'gray.300')}
+                        >
+                          {patient.occupation || 'N/A'}
+                        </Text>
+                      </Td>
+                      <Td maxW="250px">
+                        <Tooltip label={patient.chiefComplaints} placement="top">
+                          <Text 
+                            fontSize="sm" 
+                            noOfLines={2}
+                            color={useColorModeValue('gray.600', 'gray.400')}
+                          >
+                            {patient.chiefComplaints}
+                          </Text>
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <HStack spacing={1}>
+                          <FiCalendar size={12} />
+                          <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                            {getLastVisitDate(patient)}
+                          </Text>
+                        </HStack>
+                      </Td>
+                      <Td>
+                        <HStack spacing={1}>
+                          <Tooltip label="View patient details" placement="top">
+                            <IconButton
+                              icon={<FiEye />}
+                              variant="outline"
+                              onClick={() => viewPatient(patient.id)}
+                              aria-label="View patient"
+                              size="sm"
+                            />
+                          </Tooltip>
+                          <Tooltip label="Edit patient" placement="top">
+                            <IconButton
+                              icon={<FiEdit2 />}
+                              variant="outline"
+                              onClick={() => editPatient(patient.id)}
+                              aria-label="Edit patient"
+                              size="sm"
+                            />
+                          </Tooltip>
+                          <Tooltip label="Delete patient" placement="top">
+                            <IconButton
+                              icon={<FiTrash2 />}
+                              variant="outline"
+                              colorScheme="red"
+                              onClick={() => confirmDelete(patient)}
+                              aria-label="Delete patient"
+                              size="sm"
+                            />
+                          </Tooltip>
+                        </HStack>
                       </Td>
                     </Tr>
                   ))
                 ) : (
                   <Tr>
-                    <Td colSpan={5} textAlign="center">
-                      {searchTerm ? 'No patients match your search.' : 'No patients found.'}
+                    <Td colSpan={8} textAlign="center" py={8}>
+                      <Text color={useColorModeValue('gray.500', 'gray.400')}>
+                        {searchTerm ? 'No patients match your search.' : 'No patients found.'}
+                      </Text>
                     </Td>
                   </Tr>
                 )}

@@ -54,6 +54,35 @@ const PatientRegistration = () => {
   const [formError, setFormError] = useState(null);
   const [pendingPatientData, setPendingPatientData] = useState(null);
 
+  // Helper functions for displaying selected options in confirmation modal
+  const getSelectedConditions = (conditions) => {
+    return Object.keys(conditions)
+      .filter(key => key !== 'commonNotes' && conditions[key] === true)
+      .map(key => key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'))
+      .join(', ') || 'None selected';
+  };
+
+  const getPhysicalGeneralsText = (physicalGenerals) => {
+    const entries = Object.entries(physicalGenerals)
+      .filter(([key, value]) => value && value.trim() !== '')
+      .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`);
+    return entries.length > 0 ? entries.join(', ') : 'No information provided';
+  };
+
+  const getMenstrualHistoryText = (menstrualHistory) => {
+    const entries = Object.entries(menstrualHistory)
+      .filter(([key, value]) => value && value.trim() !== '' && value !== 'No')
+      .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}: ${value}`);
+    return entries.length > 0 ? entries.join(', ') : 'No specific details provided';
+  };
+
+  const getFoodAndHabitText = (foodAndHabit) => {
+    const entries = Object.entries(foodAndHabit)
+      .filter(([key, value]) => value && value.trim() !== '')
+      .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}: ${value}`);
+    return entries.length > 0 ? entries.join(', ') : 'No specific habits mentioned';
+  };
+
   // Enhanced form validation schema
   const validationSchema = Yup.object({
     name: Yup.string().trim().required('Patient name is required'),
@@ -96,6 +125,7 @@ const PatientRegistration = () => {
       medicalHistory: {
         pastHistory: {
           allergy: false,
+          commonNotes: '',
           anemia: false,
           arthritis: false,
           asthma: false,
@@ -321,7 +351,7 @@ const PatientRegistration = () => {
               <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
                 <GridItem>
                   <FormControl isInvalid={formik.touched.name && formik.errors.name}>
-                    <FormLabel>Patient Name</FormLabel>
+                    <FormLabel>Patient Name <Text as="span" color="red.500">*</Text></FormLabel>
                     <Input 
                       name="name" 
                       placeholder="Enter patient's full name" 
@@ -344,7 +374,7 @@ const PatientRegistration = () => {
 
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                   <FormControl isInvalid={formik.touched.address && formik.errors.address}>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Address <Text as="span" color="red.500">*</Text></FormLabel>
                     <Textarea 
                       name="address" 
                       placeholder="Enter complete address" 
@@ -357,7 +387,7 @@ const PatientRegistration = () => {
 
                 <GridItem>
                   <FormControl isInvalid={formik.touched.age && formik.errors.age}>
-                    <FormLabel>Age</FormLabel>
+                    <FormLabel>Age <Text as="span" color="red.500">*</Text></FormLabel>
                     <Input 
                       name="age" 
                       type="number" 
@@ -370,12 +400,11 @@ const PatientRegistration = () => {
 
                 <GridItem>
                   <FormControl isInvalid={formik.touched.sex && formik.errors.sex}>
-                    <FormLabel>Sex</FormLabel>
+                    <FormLabel>Sex <Text as="span" color="red.500">*</Text></FormLabel>
                     <Select 
                       name="sex" 
                       placeholder="Select sex"
                       {...formik.getFieldProps('sex')}
-                      isRequired={true}
                       aria-required="true"
                     >
                       <option value="Male">Male</option>
@@ -399,10 +428,9 @@ const PatientRegistration = () => {
 
                 <GridItem>
                   <FormControl 
-                    isRequired={true}
                     isInvalid={formik.touched.mobileNumber && formik.errors.mobileNumber}
                   >
-                    <FormLabel>Mobile Number *</FormLabel>
+                    <FormLabel>Mobile Number <Text as="span" color="red.500">*</Text></FormLabel>
                     <Input 
                       name="mobileNumber" 
                       placeholder="Enter contact number"
@@ -429,10 +457,9 @@ const PatientRegistration = () => {
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                   <Divider my="2" />
                   <FormControl 
-                    isRequired={true}
                     isInvalid={formik.touched.chiefComplaints && formik.errors.chiefComplaints}
                   >
-                    <FormLabel>Chief Complaints *</FormLabel>
+                    <FormLabel>Chief Complaints <Text as="span" color="red.500">*</Text></FormLabel>
                     <Textarea 
                       name="chiefComplaints" 
                       placeholder="Describe the main symptoms or complaints"
@@ -456,7 +483,235 @@ const PatientRegistration = () => {
                     <FormErrorMessage>{formik.errors.chiefComplaints}</FormErrorMessage>
                   </FormControl>
                 </GridItem>
-              </Grid>              {(error || formError) && (
+              </Grid>
+
+              {/* Medical History Sections */}
+              <Box mt={6}>
+                <Heading size="md" mb={4} color={useColorModeValue('gray.700', 'gray.200')}>
+                  Medical History & Additional Information
+                </Heading>
+                <Accordion allowMultiple defaultIndex={[]} variant="outline">
+                  {/* Past Medical History */}
+                  <AccordionItem>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left" fontWeight="semibold">
+                        Past Medical History
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
+                        Select any conditions the patient has had in the past:
+                      </Text>
+                      <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }} gap={3}>
+                        {Object.keys(formik.values.medicalHistory.pastHistory)
+                          .filter(key => key !== 'commonNotes')
+                          .map((key) => (
+                          <Checkbox
+                            key={key}
+                            isChecked={formik.values.medicalHistory.pastHistory[key]}
+                            onChange={(e) => {
+                              formik.setFieldValue(`medicalHistory.pastHistory.${key}`, e.target.checked);
+                            }}
+                            colorScheme="brand"
+                          >
+                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </Checkbox>
+                        ))}
+                      </Grid>
+                      <FormControl mt={4}>
+                        <FormLabel fontSize="sm">Additional Notes</FormLabel>
+                        <Textarea
+                          placeholder="Any additional past medical history details..."
+                          size="sm"
+                          rows={3}
+                          {...formik.getFieldProps('medicalHistory.pastHistory.commonNotes')}
+                        />
+                      </FormControl>
+                    </AccordionPanel>
+                  </AccordionItem>
+
+                  {/* Family History */}
+                  <AccordionItem>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left" fontWeight="semibold">
+                        Family History
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
+                        Select any conditions that run in the patient's family:
+                      </Text>
+                      <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={3}>
+                        {Object.keys(formik.values.medicalHistory.familyHistory).map((key) => (
+                          <Checkbox
+                            key={key}
+                            isChecked={formik.values.medicalHistory.familyHistory[key]}
+                            onChange={(e) => formik.setFieldValue(`medicalHistory.familyHistory.${key}`, e.target.checked)}
+                            colorScheme="brand"
+                          >
+                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </Checkbox>
+                        ))}
+                      </Grid>
+                    </AccordionPanel>
+                  </AccordionItem>
+
+                  {/* Physical Generals */}
+                  <AccordionItem>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left" fontWeight="semibold">
+                        Physical Generals
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
+                        General physical and lifestyle information:
+                      </Text>
+                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} gap={4}>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Appetite</FormLabel>
+                          <Input 
+                            placeholder="e.g., Good, Poor, Variable"
+                            {...formik.getFieldProps('physicalGenerals.appetite')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Bowel Movement</FormLabel>
+                          <Input 
+                            placeholder="e.g., Regular, Constipated"
+                            {...formik.getFieldProps('physicalGenerals.bowel')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Urine</FormLabel>
+                          <Input 
+                            placeholder="e.g., Normal, Frequent"
+                            {...formik.getFieldProps('physicalGenerals.urine')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Sweating</FormLabel>
+                          <Input 
+                            placeholder="e.g., Normal, Excessive"
+                            {...formik.getFieldProps('physicalGenerals.sweating')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Sleep Pattern</FormLabel>
+                          <Input 
+                            placeholder="e.g., Good, Disturbed"
+                            {...formik.getFieldProps('physicalGenerals.sleep')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Thirst</FormLabel>
+                          <Input 
+                            placeholder="e.g., Normal, Excessive"
+                            {...formik.getFieldProps('physicalGenerals.thirst')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Addictions</FormLabel>
+                          <Input 
+                            placeholder="e.g., Smoking, Alcohol, None"
+                            {...formik.getFieldProps('physicalGenerals.addictions')} 
+                          />
+                        </FormControl>
+                      </Grid>
+                    </AccordionPanel>
+                  </AccordionItem>
+
+                  {/* Menstrual History - Only for females */}
+                  {formik.values.sex === 'Female' && (
+                    <AccordionItem>
+                      <AccordionButton>
+                        <Box flex="1" textAlign="left" fontWeight="semibold">
+                          Menstrual History
+                        </Box>
+                        <AccordionIcon />
+                      </AccordionButton>
+                      <AccordionPanel pb={4}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
+                          Menstrual and gynecological history:
+                        </Text>
+                        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                          <FormControl>
+                            <FormLabel fontSize="sm">Menses Details</FormLabel>
+                            <Input 
+                              placeholder="e.g., Regular 28-day cycle"
+                              {...formik.getFieldProps('menstrualHistory.menses')} 
+                            />
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel fontSize="sm">Menopause</FormLabel>
+                            <Select {...formik.getFieldProps('menstrualHistory.menopause')}>
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </Select>
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel fontSize="sm">Leucorrhoea</FormLabel>
+                            <Input 
+                              placeholder="Any unusual discharge"
+                              {...formik.getFieldProps('menstrualHistory.leucorrhoea')} 
+                            />
+                          </FormControl>
+                          <FormControl>
+                            <FormLabel fontSize="sm">Gonorrhea</FormLabel>
+                            <Select {...formik.getFieldProps('menstrualHistory.gonorrhea')}>
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </Select>
+                          </FormControl>
+                          <FormControl colSpan={{ base: 1, md: 2 }}>
+                            <FormLabel fontSize="sm">Other Discharges</FormLabel>
+                            <Input 
+                              placeholder="Any other vaginal discharges or issues"
+                              {...formik.getFieldProps('menstrualHistory.otherDischarges')} 
+                            />
+                          </FormControl>
+                        </Grid>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  )}
+
+                  {/* Food & Habit */}
+                  <AccordionItem>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left" fontWeight="semibold">
+                        Food & Habit
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel pb={4}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
+                        Dietary habits and lifestyle information:
+                      </Text>
+                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Food Habits</FormLabel>
+                          <Input 
+                            placeholder="e.g., Vegetarian, Non-vegetarian, Vegan"
+                            {...formik.getFieldProps('foodAndHabit.foodHabit')} 
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Addictions/Habits</FormLabel>
+                          <Input 
+                            placeholder="e.g., Tea, Coffee, Tobacco, Alcohol"
+                            {...formik.getFieldProps('foodAndHabit.addictions')} 
+                          />
+                        </FormControl>
+                      </Grid>
+                    </AccordionPanel>
+                  </AccordionItem>
+                </Accordion>
+              </Box>
+
+              {(error || formError) && (
                 <Alert status="error" mt={4} mb={2}>
                   <AlertIcon />
                   <Box>
@@ -556,27 +811,27 @@ const PatientRegistration = () => {
                       <Text color={useColorModeValue('gray.800', 'gray.100')}>{pendingPatientData.mobileNumber}</Text>
                     </Box>
                   </Grid>
-                  {/* Compact accordion for histories and generals */}
-                  <Accordion allowMultiple defaultIndex={[0]}>
+                  {/* Medical History - Non-editable summary */}
+                  <Accordion allowMultiple defaultIndex={[0]} variant="outline">
                     <AccordionItem>
                       <AccordionButton px={0} py={2}>
                         <Box flex="1" textAlign="left" fontWeight="semibold">Medical History (Past)</Box>
                         <AccordionIcon />
                       </AccordionButton>
                       <AccordionPanel pb={4} px={0}>
-                        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={2} fontSize="sm">
-                          {Object.keys(formik.values.medicalHistory.pastHistory).map((key) => (
-                            <Checkbox
-                              key={key}
-                              isChecked={formik.values.medicalHistory.pastHistory[key]}
-                              onChange={(e) => {
-                                formik.setFieldValue(`medicalHistory.pastHistory.${key}`, e.target.checked);
-                              }}
-                            >
-                              {key.charAt(0).toUpperCase() + key.slice(1)}
-                            </Checkbox>
-                          ))}
-                        </Grid>
+                        <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                          {getSelectedConditions(formik.values.medicalHistory.pastHistory)}
+                        </Text>
+                        {formik.values.medicalHistory.pastHistory.commonNotes && (
+                          <Box mt={2}>
+                            <Text fontSize="xs" fontWeight="semibold" color={useColorModeValue('gray.600', 'gray.400')}>
+                              Additional Notes:
+                            </Text>
+                            <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                              {formik.values.medicalHistory.pastHistory.commonNotes}
+                            </Text>
+                          </Box>
+                        )}
                       </AccordionPanel>
                     </AccordionItem>
 
@@ -586,17 +841,9 @@ const PatientRegistration = () => {
                         <AccordionIcon />
                       </AccordionButton>
                       <AccordionPanel pb={4} px={0}>
-                        <HStack spacing={4} wrap="wrap" fontSize="sm">
-                          {Object.keys(formik.values.medicalHistory.familyHistory).map((key) => (
-                            <Checkbox
-                              key={key}
-                              isChecked={formik.values.medicalHistory.familyHistory[key]}
-                              onChange={(e) => formik.setFieldValue(`medicalHistory.familyHistory.${key}`, e.target.checked)}
-                            >
-                              {key.charAt(0).toUpperCase() + key.slice(1)}
-                            </Checkbox>
-                          ))}
-                        </HStack>
+                        <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                          {getSelectedConditions(formik.values.medicalHistory.familyHistory)}
+                        </Text>
                       </AccordionPanel>
                     </AccordionItem>
 
@@ -606,36 +853,9 @@ const PatientRegistration = () => {
                         <AccordionIcon />
                       </AccordionButton>
                       <AccordionPanel pb={4} px={0}>
-                        <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={3} fontSize="sm">
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Appetite</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.appetite')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Bowel</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.bowel')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Urine</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.urine')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Sweating</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.sweating')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Sleep</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.sleep')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Thirst</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.thirst')} />
-                          </FormControl>
-                          <FormControl colSpan={3}>
-                            <FormLabel mb={1} fontSize="xs">Addictions</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('physicalGenerals.addictions')} />
-                          </FormControl>
-                        </Grid>
+                        <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                          {getPhysicalGeneralsText(formik.values.physicalGenerals)}
+                        </Text>
                       </AccordionPanel>
                     </AccordionItem>
 
@@ -646,34 +866,9 @@ const PatientRegistration = () => {
                           <AccordionIcon />
                         </AccordionButton>
                         <AccordionPanel pb={4} px={0}>
-                          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={3} fontSize="sm">
-                            <FormControl>
-                              <FormLabel mb={1} fontSize="xs">Menses</FormLabel>
-                              <Input size="sm" {...formik.getFieldProps('menstrualHistory.menses')} />
-                            </FormControl>
-                            <FormControl>
-                              <FormLabel mb={1} fontSize="xs">Menopause</FormLabel>
-                              <Select size="sm" {...formik.getFieldProps('menstrualHistory.menopause')}>
-                                <option value="No">No</option>
-                                <option value="Yes">Yes</option>
-                              </Select>
-                            </FormControl>
-                            <FormControl>
-                              <FormLabel mb={1} fontSize="xs">Leucorrhoea</FormLabel>
-                              <Input size="sm" {...formik.getFieldProps('menstrualHistory.leucorrhoea')} />
-                            </FormControl>
-                            <FormControl>
-                              <FormLabel mb={1} fontSize="xs">Gonorrhea</FormLabel>
-                              <Select size="sm" {...formik.getFieldProps('menstrualHistory.gonorrhea')}>
-                                <option value="No">No</option>
-                                <option value="Yes">Yes</option>
-                              </Select>
-                            </FormControl>
-                            <FormControl colSpan={2}>
-                              <FormLabel mb={1} fontSize="xs">Other Discharges</FormLabel>
-                              <Input size="sm" {...formik.getFieldProps('menstrualHistory.otherDischarges')} />
-                            </FormControl>
-                          </Grid>
+                          <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                            {getMenstrualHistoryText(formik.values.menstrualHistory)}
+                          </Text>
                         </AccordionPanel>
                       </AccordionItem>
                     )}
@@ -684,16 +879,9 @@ const PatientRegistration = () => {
                         <AccordionIcon />
                       </AccordionButton>
                       <AccordionPanel pb={4} px={0}>
-                        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={3} fontSize="sm">
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Food Habit</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('foodAndHabit.foodHabit')} />
-                          </FormControl>
-                          <FormControl>
-                            <FormLabel mb={1} fontSize="xs">Addictions</FormLabel>
-                            <Input size="sm" {...formik.getFieldProps('foodAndHabit.addictions')} />
-                          </FormControl>
-                        </Grid>
+                        <Text fontSize="sm" color={useColorModeValue('gray.800', 'gray.100')}>
+                          {getFoodAndHabitText(formik.values.foodAndHabit)}
+                        </Text>
                       </AccordionPanel>
                     </AccordionItem>
                   </Accordion>

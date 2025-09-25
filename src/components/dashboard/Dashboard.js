@@ -73,7 +73,7 @@ const AppointmentsSummary = ({ appointments, selectedDate }) => {
   return (
     <Box mb={6}>
       <HStack spacing={4} justify="space-between" align="center" mb={4}>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
           {isToday ? 'Today\'s Schedule' : isOverdue ? 'Overdue Appointments' : 'Scheduled Appointments'} 
           - {new Date(selectedDate).toLocaleDateString('en-US', { 
             weekday: 'long', 
@@ -82,56 +82,92 @@ const AppointmentsSummary = ({ appointments, selectedDate }) => {
             day: 'numeric' 
           })}
         </Text>
-        <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
+        <Badge 
+          colorScheme="blue" 
+          variant={useColorModeValue('subtle', 'solid')} 
+          fontSize="sm" 
+          px={3} 
+          py={1}
+        >
           {appointments.length} Total
         </Badge>
       </HStack>
       
       <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
         {isToday && (
-          <Box p={3} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200">
+          <Box 
+            p={3} 
+            bg={useColorModeValue('blue.50', 'blue.900')} 
+            borderRadius="md" 
+            border="1px" 
+            borderColor={useColorModeValue('blue.200', 'blue.600')}
+          >
             <HStack>
-              <Icon as={FiCalendar} color="blue.500" />
+              <Icon as={FiCalendar} color={useColorModeValue('blue.500', 'blue.400')} />
               <VStack align="start" spacing={0}>
-                <Text fontSize="lg" fontWeight="bold" color="blue.600">{summary.today}</Text>
-                <Text fontSize="xs" color="blue.500">Today</Text>
+                <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('blue.600', 'blue.300')}>
+                  {summary.today}
+                </Text>
+                <Text fontSize="xs" color={useColorModeValue('blue.500', 'blue.400')}>Today</Text>
               </VStack>
             </HStack>
           </Box>
         )}
         
         {summary.overdue > 0 && (
-          <Box p={3} bg="red.50" borderRadius="md" border="1px" borderColor="red.200">
+          <Box 
+            p={3} 
+            bg={useColorModeValue('red.50', 'red.900')} 
+            borderRadius="md" 
+            border="1px" 
+            borderColor={useColorModeValue('red.200', 'red.600')}
+          >
             <HStack>
-              <Icon as={FiAlertCircle} color="red.500" />
+              <Icon as={FiAlertCircle} color={useColorModeValue('red.500', 'red.400')} />
               <VStack align="start" spacing={0}>
-                <Text fontSize="lg" fontWeight="bold" color="red.600">{summary.overdue}</Text>
-                <Text fontSize="xs" color="red.500">Overdue</Text>
+                <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('red.600', 'red.300')}>
+                  {summary.overdue}
+                </Text>
+                <Text fontSize="xs" color={useColorModeValue('red.500', 'red.400')}>Overdue</Text>
               </VStack>
             </HStack>
           </Box>
         )}
         
         {summary.upcoming > 0 && (
-          <Box p={3} bg="green.50" borderRadius="md" border="1px" borderColor="green.200">
+          <Box 
+            p={3} 
+            bg={useColorModeValue('green.50', 'green.900')} 
+            borderRadius="md" 
+            border="1px" 
+            borderColor={useColorModeValue('green.200', 'green.600')}
+          >
             <HStack>
-              <Icon as={FiClock} color="green.500" />
+              <Icon as={FiClock} color={useColorModeValue('green.500', 'green.400')} />
               <VStack align="start" spacing={0}>
-                <Text fontSize="lg" fontWeight="bold" color="green.600">{summary.upcoming}</Text>
-                <Text fontSize="xs" color="green.500">Upcoming</Text>
+                <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('green.600', 'green.300')}>
+                  {summary.upcoming}
+                </Text>
+                <Text fontSize="xs" color={useColorModeValue('green.500', 'green.400')}>Upcoming</Text>
               </VStack>
             </HStack>
           </Box>
         )}
         
-        <Box p={3} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200">
+        <Box 
+          p={3} 
+          bg={useColorModeValue('gray.50', 'gray.700')} 
+          borderRadius="md" 
+          border="1px" 
+          borderColor={useColorModeValue('gray.200', 'gray.600')}
+        >
           <HStack>
-            <Icon as={FiUsers} color="gray.500" />
+            <Icon as={FiUsers} color={useColorModeValue('gray.500', 'gray.400')} />
             <VStack align="start" spacing={0}>
-              <Text fontSize="lg" fontWeight="bold" color="gray.600">
+              <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.600', 'gray.300')}>
                 {new Set(appointments.map(a => a.patient?.id)).size}
               </Text>
-              <Text fontSize="xs" color="gray.500">Patients</Text>
+              <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>Patients</Text>
             </VStack>
           </HStack>
         </Box>
@@ -236,23 +272,40 @@ const AppointmentsTable = ({ appointments, selectedDate }) => {
       {/* Filter and Sort Controls */}
       <HStack spacing={4} mb={4} wrap="wrap">
         <Box>
-          <Text fontSize="sm" mb={1} color="gray.600">Search</Text>
+          <Text fontSize="sm" mb={1} color={useColorModeValue('gray.600', 'gray.400')}>Search</Text>
           <Input
             placeholder="Search patients, details, phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             size="sm"
             maxW="250px"
+            bg={useColorModeValue('white', 'gray.700')}
+            borderColor={useColorModeValue('gray.300', 'gray.600')}
+            color={useColorModeValue('gray.800', 'gray.100')}
+            _placeholder={{ 
+              color: useColorModeValue('gray.400', 'gray.500') 
+            }}
+            _focus={{
+              borderColor: useColorModeValue('blue.500', 'blue.400'),
+              boxShadow: `0 0 0 1px ${useColorModeValue('blue.500', 'blue.400')}`
+            }}
           />
         </Box>
         
         <Box>
-          <Text fontSize="sm" mb={1} color="gray.600">Filter by Status</Text>
+          <Text fontSize="sm" mb={1} color={useColorModeValue('gray.600', 'gray.400')}>Filter by Status</Text>
           <Select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             size="sm"
             maxW="150px"
+            bg={useColorModeValue('white', 'gray.700')}
+            borderColor={useColorModeValue('gray.300', 'gray.600')}
+            color={useColorModeValue('gray.800', 'gray.100')}
+            _focus={{
+              borderColor: useColorModeValue('blue.500', 'blue.400'),
+              boxShadow: `0 0 0 1px ${useColorModeValue('blue.500', 'blue.400')}`
+            }}
           >
             <option value="all">All</option>
             <option value="today">Today</option>
@@ -262,12 +315,19 @@ const AppointmentsTable = ({ appointments, selectedDate }) => {
         </Box>
         
         <Box>
-          <Text fontSize="sm" mb={1} color="gray.600">Sort by</Text>
+          <Text fontSize="sm" mb={1} color={useColorModeValue('gray.600', 'gray.400')}>Sort by</Text>
           <Select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             size="sm"
             maxW="150px"
+            bg={useColorModeValue('white', 'gray.700')}
+            borderColor={useColorModeValue('gray.300', 'gray.600')}
+            color={useColorModeValue('gray.800', 'gray.100')}
+            _focus={{
+              borderColor: useColorModeValue('blue.500', 'blue.400'),
+              boxShadow: `0 0 0 1px ${useColorModeValue('blue.500', 'blue.400')}`
+            }}
           >
             <option value="name">Patient Name</option>
             <option value="date">Appointment Date</option>
@@ -276,8 +336,13 @@ const AppointmentsTable = ({ appointments, selectedDate }) => {
         </Box>
         
         <Box>
-          <Text fontSize="sm" mb={1} color="gray.600">Results</Text>
-          <Badge colorScheme="gray" px={3} py={1}>
+          <Text fontSize="sm" mb={1} color={useColorModeValue('gray.600', 'gray.400')}>Results</Text>
+          <Badge 
+            colorScheme="gray" 
+            variant={useColorModeValue('subtle', 'solid')} 
+            px={3} 
+            py={1}
+          >
             {filteredAndSortedAppointments.length} of {appointments.length}
           </Badge>
         </Box>
@@ -579,14 +644,181 @@ const BranchAdminDashboard = ({ stats, branchName }) => {
 };
 
 // Doctor Dashboard Component
-const DoctorDashboard = ({ stats, branchName }) => {
+const DoctorDashboard = ({ stats, branchName, selectedDate, setSelectedDate, appointments, loadingAppointments }) => {
+  // Calculate date-specific stats from appointments
+  const dateSpecificStats = React.useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateObj = new Date(selectedDate);
+    selectedDateObj.setHours(0, 0, 0, 0);
+    
+    const isToday = selectedDateObj.getTime() === today.getTime();
+    
+    // If today is selected, show today's appointments, otherwise show selected date appointments
+    const todayAppointments = appointments.length;
+    
+    // Calculate different appointment statuses for the selected date
+    const appointmentStats = appointments.reduce((acc, appointment) => {
+      const appointmentDate = new Date(appointment.followUpDate);
+      appointmentDate.setHours(0, 0, 0, 0);
+      
+      if (appointmentDate < today) {
+        acc.overdue++;
+      } else if (appointmentDate.getTime() === today.getTime()) {
+        acc.today++;
+      } else {
+        acc.upcoming++;
+      }
+      return acc;
+    }, { overdue: 0, today: 0, upcoming: 0 });
+    
+    return {
+      appointmentsForDate: todayAppointments,
+      uniquePatients: new Set(appointments.map(a => a.patient?.id)).size,
+      overdueCount: appointmentStats.overdue,
+      upcomingCount: appointmentStats.upcoming,
+      isToday
+    };
+  }, [appointments, selectedDate]);
+
+  return (
+    <Box p={6}>
+      {/* Header with Title and Date Picker */}
+      <Flex justify="space-between" align="center" mb={2} wrap="wrap" gap={4}>
+        <Box>
+          <Heading size="lg">Doctor Dashboard</Heading>
+          {branchName && <Badge colorScheme="purple" mt={2}>{branchName}</Badge>}
+        </Box>
+        
+        {/* Date Picker in Header */}
+        <Flex align="center" gap={3}>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            size="sm"
+            width="auto"
+            minW="150px"
+            bg={useColorModeValue('white', 'gray.700')}
+            borderColor={useColorModeValue('gray.300', 'gray.600')}
+            color={useColorModeValue('gray.800', 'gray.100')}
+            _focus={{
+              borderColor: useColorModeValue('blue.500', 'blue.400'),
+              boxShadow: `0 0 0 1px ${useColorModeValue('blue.500', 'blue.400')}`
+            }}
+          />
+          <Badge 
+            colorScheme={selectedDate === new Date().toISOString().split('T')[0] ? 'blue' : 'gray'}
+            variant={useColorModeValue('subtle', 'solid')}
+            px={2}
+            py={1}
+          >
+            {selectedDate === new Date().toISOString().split('T')[0] ? 'TODAY' : new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </Badge>
+        </Flex>
+      </Flex>
+      
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+        <StatCard
+          title={dateSpecificStats.isToday ? "Today's Appointments" : "Appointments"}
+          stat={dateSpecificStats.appointmentsForDate}
+          icon={FiCalendar}
+          helpText={dateSpecificStats.isToday ? "Scheduled today" : `For ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+          accentColor="blue.500"
+        />
+        <StatCard
+          title="Patients"
+          stat={dateSpecificStats.uniquePatients}
+          icon={FiUsers}
+          helpText={dateSpecificStats.isToday ? "Today" : "Selected date"}
+          accentColor="green.500"
+        />
+        <StatCard
+          title="All Pending Follow-ups"
+          stat={stats.pendingReports || 0}
+          icon={FiFileText}
+          helpText="All future appointments"
+          accentColor="orange.500"
+        />
+        <StatCard
+          title="Total Investigations"
+          stat={stats.investigationCount || 0}
+          icon={FiActivity}
+          helpText="All time"
+          accentColor="purple.500"
+        />
+      </SimpleGrid>
+
+      {/* Appointments Section */}
+      <Card mt={8}>
+        <CardBody>
+          <Flex justify="space-between" align="center" mb={6}>
+            <Heading size="md" color={useColorModeValue('gray.700', 'gray.100')}>
+              {dateSpecificStats.isToday ? "Today's Schedule" : "Appointments Schedule"}
+            </Heading>
+            <Badge 
+              colorScheme={dateSpecificStats.isToday ? "blue" : "gray"}
+              variant={useColorModeValue('subtle', 'solid')} 
+              fontSize="sm" 
+              px={3} 
+              py={1}
+            >
+              {dateSpecificStats.appointmentsForDate} {dateSpecificStats.appointmentsForDate === 1 ? 'appointment' : 'appointments'}
+            </Badge>
+          </Flex>
+          
+          {loadingAppointments ? (
+            <Flex justifyContent="center" py={8}>
+              <Spinner size="lg" color="blue.500" />
+              <Text ml={3}>Loading appointments...</Text>
+            </Flex>
+          ) : appointments.length > 0 ? (
+            <Box>
+              <AppointmentsSummary 
+                appointments={appointments} 
+                selectedDate={selectedDate}
+              />
+              <AppointmentsTable 
+                appointments={appointments} 
+                selectedDate={selectedDate}
+              />
+            </Box>
+          ) : (
+            <Box textAlign="center" py={8}>
+              <Icon as={FiCalendar} w={12} h={12} color={useColorModeValue('gray.300', 'gray.600')} mb={4} />
+              <Text color={useColorModeValue('gray.500', 'gray.400')} fontSize="lg">
+                No appointments scheduled for {new Date(selectedDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric'
+                })}
+              </Text>
+              <Text color={useColorModeValue('gray.400', 'gray.500')} fontSize="sm" mt={2}>
+                Appointments will appear here when scheduled through investigation reports
+              </Text>
+            </Box>
+          )}
+        </CardBody>
+      </Card>
+    </Box>
+  );
+};
+
+// Main Dashboard Component
+const Dashboard = () => {
+  const { data: session } = useSession();
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [appointments, setAppointments] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const toast = useToast();
 
-  // Fetch appointments for selected date
+  // Fetch appointments for selected date (only for doctors)
   const fetchAppointments = async (date) => {
+    if (session?.user?.role !== 'doctor') return;
+    
     try {
       setLoadingAppointments(true);
       const response = await fetch(`/api/appointments?date=${date}`);
@@ -610,101 +842,6 @@ const DoctorDashboard = ({ stats, branchName }) => {
       setLoadingAppointments(false);
     }
   };
-
-  useEffect(() => {
-    fetchAppointments(selectedDate);
-  }, [selectedDate]);
-
-  return (
-    <Box p={6}>
-      <Heading size="lg" mb={2}>Doctor Dashboard</Heading>
-      {branchName && <Badge colorScheme="purple" mb={6}>{branchName}</Badge>}
-      
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
-        <StatCard
-          title="My Patients"
-          stat={stats.myPatientCount || 0}
-          icon={FiUsers}
-          accentColor="green.500"
-        />
-        <StatCard
-          title="Today's Appointments"
-          stat={stats.todaysAppointments || 0}
-          icon={FiCalendar}
-          helpText="Scheduled today"
-          accentColor="blue.500"
-        />
-        <StatCard
-          title="Pending Follow-ups"
-          stat={stats.pendingReports || 0}
-          icon={FiFileText}
-          accentColor="orange.500"
-        />
-        <StatCard
-          title="Total Investigations"
-          stat={stats.investigationCount || 0}
-          icon={FiActivity}
-          accentColor="purple.500"
-        />
-      </SimpleGrid>
-
-      {/* Appointments Section */}
-      <Card mt={8}>
-        <CardBody>
-          <Flex justify="space-between" align="center" mb={6}>
-            <Heading size="md">Appointments Schedule</Heading>
-            <Flex align="center" gap={2}>
-              <Text fontSize="sm" color="gray.600">Select Date:</Text>
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                size="sm"
-                width="auto"
-                bg="white"
-              />
-            </Flex>
-          </Flex>
-          
-          {loadingAppointments ? (
-            <Flex justifyContent="center" py={8}>
-              <Spinner size="lg" color="blue.500" />
-              <Text ml={3}>Loading appointments...</Text>
-            </Flex>
-          ) : appointments.length > 0 ? (
-            <Box>
-              <AppointmentsSummary 
-                appointments={appointments} 
-                selectedDate={selectedDate}
-              />
-              <AppointmentsTable 
-                appointments={appointments} 
-                selectedDate={selectedDate}
-              />
-            </Box>
-          ) : (
-            <Box textAlign="center" py={8}>
-              <Icon as={FiCalendar} w={12} h={12} color="gray.300" mb={4} />
-              <Text color="gray.500" fontSize="lg">
-                No appointments scheduled for {new Date(selectedDate).toLocaleDateString()}
-              </Text>
-              <Text color="gray.400" fontSize="sm" mt={2}>
-                Appointments will appear here when scheduled through investigation reports
-              </Text>
-            </Box>
-          )}
-        </CardBody>
-      </Card>
-    </Box>
-  );
-};
-
-// Main Dashboard Component
-const Dashboard = () => {
-  const { data: session } = useSession();
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
-  const toast = useToast();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -744,6 +881,12 @@ const Dashboard = () => {
     }
   }, [toast, session]);
 
+  useEffect(() => {
+    if (session?.user?.role === 'doctor') {
+      fetchAppointments(selectedDate);
+    }
+  }, [selectedDate, session]);
+
   if (loading) {
     return (
       <Flex justifyContent="center" alignItems="center" minHeight="50vh" direction="column">
@@ -760,6 +903,8 @@ const Dashboard = () => {
 
   const { role, clinicName, branchName } = session.user;
 
+
+
   switch (role) {
     case 'superadmin':
       return <SuperAdminDashboard stats={stats} />;
@@ -769,7 +914,16 @@ const Dashboard = () => {
       return <BranchAdminDashboard stats={stats} branchName={branchName} />;
     case 'doctor':
     default:
-      return <DoctorDashboard stats={stats} branchName={branchName} />;
+      return (
+        <DoctorDashboard 
+          stats={stats} 
+          branchName={branchName} 
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          appointments={appointments}
+          loadingAppointments={loadingAppointments}
+        />
+      );
   }
 };
 

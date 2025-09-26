@@ -64,8 +64,7 @@ export default async function handler(req, res) {
             },
             _count: {
               select: {
-                users: true,
-                patients: true
+                users: true
               }
             }
           }
@@ -121,24 +120,23 @@ export default async function handler(req, res) {
           return res.status(403).json({ error: 'Forbidden - Insufficient permissions to delete branch' });
         }
         
-        // Check if branch has any users or patients
+        // Check if branch has any users
         const branchToDelete = await prisma.branch.findUnique({
           where: { id },
           include: {
             _count: {
               select: {
-                users: true,
-                patients: true
+                users: true
               }
             }
           }
         });
         
-        // Prevent deletion if branch has users or patients
-        if (branchToDelete._count.users > 0 || branchToDelete._count.patients > 0) {
+        // Prevent deletion if branch has users
+        if (branchToDelete._count.users > 0) {
           return res.status(400).json({ 
             error: 'Cannot delete branch', 
-            message: 'Please remove all users and patients from this branch first'
+            message: 'Please remove all users from this branch first'
           });
         }
         

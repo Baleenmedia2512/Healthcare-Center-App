@@ -27,8 +27,7 @@ export default async function handler(req, res) {
             },
             _count: {
               select: {
-                users: true,
-                patients: true
+                users: true
               }
             }
           }
